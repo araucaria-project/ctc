@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 from collections import OrderedDict
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from ob.planrunner.cycle_time_calc.abstract_cycle_time import AbstractCycleTime
+from ctc.abstract_cycle_time import AbstractCycleTime
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
 import logging

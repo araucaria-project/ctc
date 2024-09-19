@@ -1,11 +1,12 @@
 from typing import Dict, Any, List, Union
 import logging
-from ob.planrunner.cycle_time_calc.abstract_cycle_time import AbstractCycleTime
+from ctc.abstract_cycle_time import AbstractCycleTime
 import datetime
 from pyaraucaria.coordinates import ra_dec_2_az_alt, ra_to_decimal, dec_to_decimal
 from pyaraucaria.ephemeris import calculate_sun_rise_set
 from pyaraucaria.obs_plan.obs_plan_parser import ObsPlanParser
 import time
+
 
 logger = logging.getLogger(__name__.rsplit('.')[-1])
 

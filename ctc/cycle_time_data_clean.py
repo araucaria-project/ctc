@@ -1,5 +1,5 @@
 from typing import Dict, Any, List
-from ob.planrunner.cycle_time_calc.abstract_cycle_time import AbstractCycleTime
+from ctc.abstract_cycle_time import AbstractCycleTime
 import logging
 from collections import OrderedDict
 

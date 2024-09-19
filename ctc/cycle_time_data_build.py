@@ -1,7 +1,7 @@
 from typing import Dict, Any
-from .ctdata import CTData
+from ctc.ctdata import CTData
 import logging
-from ob.planrunner.cycle_time_calc.abstract_cycle_time import AbstractCycleTime
+from ctc.abstract_cycle_time import AbstractCycleTime
 
 
 logger = logging.getLogger(__name__.rsplit('.')[-1])
