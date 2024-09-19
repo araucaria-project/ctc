@@ -124,8 +124,8 @@ class CycleTimeCalc(AbstractCycleTime):
         self._rmode = rmode
 
     @property
-    def rm_mode_inv_mhz(self) -> float:
-        return CycleTimeCalc.rm_mode_inverse_mhz(rm_mode=self._rmode, telescope=self.telescope)
+    def _rm_mode_inv_mhz(self) -> float:
+        return CycleTimeCalc._rm_mode_inverse_mhz(rm_mode=self._rmode, telescope=self.telescope)
 
     def set_start_time(self, utc_time_stamp: datetime.datetime) -> None:
         self._start_time = utc_time_stamp
@@ -178,11 +178,11 @@ class CycleTimeCalc(AbstractCycleTime):
         azalt = self._mount_altaz_target(command_dict=command_dict)
         if azalt is not None:
             if (azalt['alt'] >= self._alt_limit) or (azalt['alt'] < self._alt_limit and self._skipping is False):
-                mount_alt_az_dist = CycleTimeCalc.alt_az_distance(start_alt=self._alt_mount,
+                mount_alt_az_dist = CycleTimeCalc._alt_az_distance(start_alt=self._alt_mount,
                                                                   end_alt=azalt['alt'],
                                                                   start_az=self._az_mount,
                                                                   end_az=azalt['az'])
-                dome_az_dist = CycleTimeCalc.az_distance(start=self._az_dome, end=azalt['az'])
+                dome_az_dist = CycleTimeCalc._az_distance(start=self._az_dome, end=azalt['az'])
                 self._alt_mount = azalt['alt']
                 self._az_mount = azalt['az']
                 self._az_dome = azalt['az']
@@ -193,16 +193,16 @@ class CycleTimeCalc(AbstractCycleTime):
             mount_alt_az_dist = 0.0
             dome_az_dist = 0.0
         command_dict_param = {}
-        exp_no = CycleTimeCalc.exposure_number(command_dict)
-        dither = CycleTimeCalc.dither_on(command_dict=command_dict)
+        exp_no = CycleTimeCalc._exposure_number(command_dict)
+        dither = CycleTimeCalc._dither_on(command_dict=command_dict)
         command_dict['filter_pos'] = self._current_filter
         command_dict_param['dome_distance'] = dome_az_dist
         command_dict_param['mount_distance'] = mount_alt_az_dist
-        command_dict_param['exposure_time_sum'] = CycleTimeCalc.exposure_time_sum(command_dict)
-        command_dict_param['filter_changes'] = CycleTimeCalc.filter_changes(record=command_dict)
-        command_dict_param['rmmode_expno'] = self.rm_mode_inv_mhz * exp_no
+        command_dict_param['exposure_time_sum'] = CycleTimeCalc._exposure_time_sum(command_dict)
+        command_dict_param['filter_changes'] = CycleTimeCalc._filter_changes(record=command_dict)
+        command_dict_param['rmmode_expno'] = self._rm_mode_inv_mhz * exp_no
         command_dict_param['dither_expno'] = dither * exp_no
-        self._current_filter = CycleTimeCalc.last_filter(command_dict)
+        self._current_filter = CycleTimeCalc._last_filter(command_dict)
         time_cal = self._calc_time(command_name=command_dict['command_name'], command_dict_param=command_dict_param)
         if time_cal:
             if time_cal >= 0:

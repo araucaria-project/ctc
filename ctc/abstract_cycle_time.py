@@ -82,7 +82,7 @@ class AbstractCycleTime(ABC):
         return f'{telescope}_{command}_{AbstractCycleTime.FILE_NAMES["clean_data"]}'
 
     @staticmethod
-    def train_param_file_name(telescope: str, command: str) -> str:
+    def _train_param_file_name(telescope: str, command: str) -> str:
         return f'{telescope}_{command}_{AbstractCycleTime.FILE_NAMES["train_param"]}'
 
     @staticmethod
@@ -131,19 +131,20 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
-    def time_stamp() -> datetime:
+    def _time_stamp() -> datetime:
         return datetime.datetime.utcnow()
 
     @staticmethod
-    def rm_mode(record: Dict[str, Any]) -> int:
+    def _rm_mode(record: Dict[str, Any]) -> int:
         try:
             return int(record['readoutmode'])
         except KeyError:
             return 1
 
     @staticmethod
-    def rm_mode_inverse_mhz(rm_mode: int, telescope: str) -> float or int or None:
-        rm_modes = AbstractCycleTime.RM_MODES_MHZ
+    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[float] = None) -> float or int or None:
+        if not rm_modes:
+            rm_modes = AbstractCycleTime.RM_MODES_MHZ
         if rm_modes is not None:
             if telescope in rm_modes.keys():
                 if len(rm_modes[telescope]) - 1 >= rm_mode:
@@ -170,16 +171,15 @@ class AbstractCycleTime(ABC):
             logger.warning('Can not read readoutmode inverse MHz - 1 returned')
             return 1
 
-
     @staticmethod
-    def dither(record: Dict[str, Any]) -> int:
+    def _dither(record: Dict[str, Any]) -> int:
         if record['dither'] == 'True':
             return 1
         else:
             return 0
 
     @staticmethod
-    def az_distance(start: float, end: float) -> float:
+    def _az_distance(start: float, end: float) -> float:
         """
         Method giving back shortest distance in azimuth
         :param start: start position of azimuth
@@ -197,7 +197,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def vector(alt: float, az: float) -> np.array:
+    def _vector(alt: float, az: float) -> np.array:
         """
         Method builds vector from alt az
         :param alt: alt degrees
@@ -214,7 +214,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def alt_az_distance(start_alt: float, end_alt: float, start_az: float, end_az: float) -> float:
+    def _alt_az_distance(start_alt: float, end_alt: float, start_az: float, end_az: float) -> float:
         """
         Method calculate angle between altaz positions
         :param start_alt: start alt degrees
@@ -223,8 +223,8 @@ class AbstractCycleTime(ABC):
         :param end_az: end az degrees
         :return: distance in degrees
         """
-        v1 = AbstractCycleTime.vector(alt=start_alt, az=start_az)
-        v2 = AbstractCycleTime.vector(alt=end_alt, az=end_az)
+        v1 = AbstractCycleTime._vector(alt=start_alt, az=start_az)
+        v2 = AbstractCycleTime._vector(alt=end_alt, az=end_az)
         if np.array_equal(v1, v2):
             ret = 0.0
         else:
@@ -234,7 +234,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def exposure_time_sum(record: Dict[str, Any]) -> float:
+    def _exposure_time_sum(record: Dict[str, Any]) -> float:
         ret = 0
         if 'kwargs' in record.keys():
             if 'seq' in record['kwargs']:
@@ -254,7 +254,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def seq_number(record: Dict[str, Any]) -> int:
+    def _seq_number(record: Dict[str, Any]) -> int:
         ret = 0
         if 'kwargs' in record.keys():
             if 'seq' in record['kwargs']:
@@ -266,7 +266,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def multiple_seq(seq_string: str):
+    def _multiple_seq(seq_string: str):
         # TODO boilerplate - rethink
         spl_x = seq_string.split('x')
         repeat = int(spl_x[0])
@@ -279,12 +279,12 @@ class AbstractCycleTime(ABC):
     @staticmethod
     def solve_multiple_seq(seq_string: str) -> str:
         if re.fullmatch(pattern=r'\d*x\(.*\)', string=seq_string):
-            return AbstractCycleTime.multiple_seq(seq_string)
+            return AbstractCycleTime._multiple_seq(seq_string)
         else:
             return seq_string
 
     @staticmethod
-    def exposure_number(record: Dict[str, Any]) -> int:
+    def _exposure_number(record: Dict[str, Any]) -> int:
         ret = 0
         if 'kwargs' in record.keys():
             if 'seq' in record['kwargs']:
@@ -299,7 +299,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def last_filter(record: Dict[str, Any]) -> str:
+    def _last_filter(record: Dict[str, Any]) -> str:
         ret = 0
         if 'kwargs' in record.keys():
             if 'seq' in record['kwargs']:
@@ -313,7 +313,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def filter_changes(record: Dict[str, Any]) -> int:
+    def _filter_changes(record: Dict[str, Any]) -> int:
         ret = 0
         f = record['filter_pos']
         if 'kwargs' in record.keys():
@@ -329,7 +329,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def dither_on(command_dict: Dict[str, Any]) -> int:
+    def _dither_on(command_dict: Dict[str, Any]) -> int:
         """
         Do dithering or not.
         :return: bool

@@ -1,4 +1,6 @@
 from typing import Dict, Any, List
+
+from ctc import CycleTimeCalc
 from ctc.abstract_cycle_time import AbstractCycleTime
 import logging
 from collections import OrderedDict
@@ -13,7 +15,7 @@ class CycleTimeDataClean(AbstractCycleTime):
     """
 
     @staticmethod
-    def find_nights_id(data: List[Any]) -> Dict[str, Dict[str, Any]]:
+    def _find_nights_id(data: List[Any]) -> Dict[str, Dict[str, Any]]:
         random_id = ''
         full_nights_id = {}
         line_started = None
@@ -40,7 +42,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         return full_nights_id
 
     @staticmethod
-    def build_commands_data(data: List[Dict[str, Any]], telescope: str,
+    def _build_commands_data(data: List[Dict[str, Any]], telescope: str,
                             full_nights_id: Dict[str, Dict[str, Any]]) -> Dict[str, Any]:
         commands_data = {}
         for n_id, m_dict in full_nights_id.items():
@@ -60,7 +62,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         return commands_data
 
     @staticmethod
-    def verify_nights(full_nights_id: Dict[str, Dict[str, Any]], telescope: str, base_folder: str):
+    def _verify_nights(full_nights_id: Dict[str, Dict[str, Any]], telescope: str, base_folder: str):
         f = CycleTimeDataClean.read_file(folder=base_folder,
                                          file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope))
         if f is not None:
@@ -76,7 +78,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         return full_nights_id
 
     @staticmethod
-    def save_commands_data_to_files(commands_data: Dict[str, Any],
+    def _save_commands_data_to_files(commands_data: Dict[str, Any],
                                     full_nights_id: Dict[str, Dict[str, Any]],
                                     telescope: str,
                                     base_folder: str) -> None:
@@ -131,27 +133,27 @@ class CycleTimeDataClean(AbstractCycleTime):
                     CycleTimeDataClean.DATA_CLEAN_ORDER[3]:
                         float(third['utc_time_stamp']) - float(first['utc_time_stamp']),
                     CycleTimeDataClean.DATA_CLEAN_ORDER[4]:
-                        CycleTimeDataClean.az_distance(
+                        CycleTimeDataClean._az_distance(
                             start=float(first['dome_az_begin']),end=float(third[index_dome])
                         ),
                     CycleTimeDataClean.DATA_CLEAN_ORDER[5]:
-                        CycleTimeDataClean.alt_az_distance(
+                        CycleTimeDataClean._alt_az_distance(
                             start_alt=float(first['mount_alt_begin']),
                             end_alt=float(third[index_mount_alt]),
                             start_az=float(first['mount_az_begin']),
                             end_az=float(third[index_mount_az])
                         ),
                     CycleTimeDataClean.DATA_CLEAN_ORDER[6]:
-                        CycleTimeDataClean.exposure_time_sum(first),
+                        CycleTimeDataClean._exposure_time_sum(first),
                     CycleTimeDataClean.DATA_CLEAN_ORDER[7]:
-                        CycleTimeDataClean.filter_changes(record=first),
+                        CycleTimeDataClean._filter_changes(record=first),
                     CycleTimeDataClean.DATA_CLEAN_ORDER[8]:
-                        CycleTimeDataClean.rm_mode_inverse_mhz(
-                            rm_mode=CycleTimeDataClean.rm_mode(second),
+                        CycleTimeDataClean._rm_mode_inverse_mhz(
+                            rm_mode=CycleTimeDataClean._rm_mode(second),
                             telescope=telescope
-                        ) * CycleTimeDataClean.exposure_number(first),
+                        ) * CycleTimeDataClean._exposure_number(first),
                     CycleTimeDataClean.DATA_CLEAN_ORDER[9]:
-                        CycleTimeDataClean.dither(first)*CycleTimeDataClean.exposure_number(first),
+                        CycleTimeDataClean._dither(first)*CycleTimeDataClean._exposure_number(first),
 
                 })
             except (KeyError, IndexError, ValueError, TypeError):
@@ -166,13 +168,13 @@ class CycleTimeDataClean(AbstractCycleTime):
         str_dat = CycleTimeDataClean.read_file(base_folder,
                                             CycleTimeDataClean.raw_file_name(telescope=telescope))
         parsed_data = CycleTimeDataClean.parse_data(str_dat)
-        full_nights_id = CycleTimeDataClean.find_nights_id(parsed_data)
-        full_nights_id = CycleTimeDataClean.verify_nights(full_nights_id=full_nights_id,
+        full_nights_id = CycleTimeDataClean._find_nights_id(parsed_data)
+        full_nights_id = CycleTimeDataClean._verify_nights(full_nights_id=full_nights_id,
                                                           telescope=telescope, base_folder=base_folder)
-        commands_data = CycleTimeDataClean.build_commands_data(data=parsed_data,
+        commands_data = CycleTimeDataClean._build_commands_data(data=parsed_data,
                                                                telescope=telescope,
                                                                full_nights_id=full_nights_id)
-        CycleTimeDataClean.save_commands_data_to_files(commands_data=commands_data,
+        CycleTimeDataClean._save_commands_data_to_files(commands_data=commands_data,
                                                        full_nights_id=full_nights_id,
                                                        telescope=telescope,
                                                        base_folder=base_folder)

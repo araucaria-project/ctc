@@ -16,8 +16,10 @@ class CycleTimeTrain(AbstractCycleTime):
     This class represent cycle time data train
     """
 
+    _MIN_DATA_RECORDS_TO_TRAIN = 10
+
     @staticmethod
-    def build_array(data: List[Dict[str, Any]], xory: str) -> np.array or None:
+    def _build_array(data: List[Dict[str, Any]], xory: str) -> np.array or None:
 
         if xory == 'x':
             w = CycleTimeTrain.X_COLUMNS
@@ -38,24 +40,24 @@ class CycleTimeTrain(AbstractCycleTime):
     @staticmethod
     def train_data_command(telescope: str, command: str, base_folder: str) -> None:
         logger.debug(f'Train telelescope: {telescope} command: {command}')
-        min_record_to_train = 10
+        min_record_to_train = CycleTimeTrain._MIN_DATA_RECORDS_TO_TRAIN
         data = CycleTimeTrain.read_file(base_folder,
                                         CycleTimeTrain.clean_data_file_name(telescope=telescope, command=command))
         parsed_data = CycleTimeTrain.parse_data(data=data)
-        data_x = CycleTimeTrain.build_array(data=parsed_data, xory='x')
-        data_y = CycleTimeTrain.build_array(data=parsed_data, xory='y')
+        data_x = CycleTimeTrain._build_array(data=parsed_data, xory='x')
+        data_y = CycleTimeTrain._build_array(data=parsed_data, xory='y')
         if (data_x is not None) and (data_y is not None) and (len(data_x) >= min_record_to_train):
-            param = CycleTimeTrain.train(data_x=data_x, data_y=data_y)
-            CycleTimeTrain.save_train_param_to_file(param=param, telescope=telescope,
+            param = CycleTimeTrain._train(data_x=data_x, data_y=data_y)
+            CycleTimeTrain._save_train_param_to_file(param=param, telescope=telescope,
                                                     command=command, base_folder=base_folder)
 
     @staticmethod
-    def save_train_param_to_file(param: Dict[str, Any], telescope: str, command: str, base_folder: str) -> None:
+    def _save_train_param_to_file(param: Dict[str, Any], telescope: str, command: str, base_folder: str) -> None:
         c = {}
         for n, m in enumerate(CycleTimeTrain.X_COLUMNS, start=0):
             c[m] = param['coef'][n]
         dat = OrderedDict({
-            'train_utc_time_stamp': str(CycleTimeTrain.time_stamp().isoformat()),
+            'train_utc_time_stamp': str(CycleTimeTrain._time_stamp().isoformat()),
             'coef': c,
             'intercept': param['intercept'],
             'r2': param['r2']
@@ -63,8 +65,8 @@ class CycleTimeTrain(AbstractCycleTime):
 
         CycleTimeTrain.add_to_file(data=CycleTimeTrain.encode_data(data=dat),
                                    folder=base_folder,
-                                   file_name=CycleTimeTrain.train_param_file_name(telescope=telescope,
-                                                                                  command=command))
+                                   file_name=CycleTimeTrain._train_param_file_name(
+                                       telescope=telescope, command=command))
         CycleTimeTrain.add_to_file(data=CycleTimeTrain.encode_data(data=dat),
                                    folder=base_folder,
                                    file_name=CycleTimeTrain.train_param_last_file_name(telescope=telescope,
@@ -73,7 +75,7 @@ class CycleTimeTrain(AbstractCycleTime):
         logger.debug(f'Save train parameters for telescope:{telescope} command:{command}')
 
     @staticmethod
-    def train(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
+    def _train(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
         model = LinearRegression()
         x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, random_state=123, test_size=0.3)
         model.fit(x_train, y_train)

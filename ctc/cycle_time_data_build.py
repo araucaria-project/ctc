@@ -11,6 +11,7 @@ class CycleTimeDataBuild(AbstractCycleTime):
     """
     This class represent cycle time data builder (collector)
     """
+
     def __init__(self, telescope: str, base_folder: str) -> None:
         self.telescope = telescope
         self.base_folder = base_folder
@@ -29,7 +30,7 @@ class CycleTimeDataBuild(AbstractCycleTime):
 
     def save_to_log(self) -> None:
         logger.debug(f'Data {self.telescope} saved to log')
-        self._data.insert_single_data('utc_date_stamp', str(self.time_stamp().isoformat()))
-        self._data.insert_single_data('utc_time_stamp', str(self.time_stamp().timestamp()))
+        self._data.insert_single_data('utc_date_stamp', str(self._time_stamp().isoformat()))
+        self._data.insert_single_data('utc_time_stamp', str(self._time_stamp().timestamp()))
         self.add_to_file(self.encode_data(self._data.data),
                          self.base_folder, self.raw_file_name(telescope=self.telescope))
