@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "ctc"
+version = "0.1.0"
+description = "Telescope Cycle Time Calculator"
+authors = ["MMiirrkk <cot@wp.pl>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+numpy = "^2.1.1"
+scikit-learn = "^1.5.2"
+pyaraucaria = {git = "https://github.com/araucaria-project/pyaraucaria.git"}
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
