@@ -148,7 +148,7 @@ class AbstractCycleTime(ABC):
             return 1
 
     @staticmethod
-    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[List[float]] = None) -> float or int or None:
+    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[str, List[float]] = None) -> float or int or None:
         if not rm_modes:
             rm_modes = AbstractCycleTime._DEFAULT_RM_MODES_MHZ
         if rm_modes is not None:

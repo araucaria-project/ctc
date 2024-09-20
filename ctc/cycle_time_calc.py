@@ -63,7 +63,7 @@ class CycleTimeCalc(AbstractCycleTime):
         self._time_length_list: List[float] = []
         self._mk_dirs(self.base_folder)
         self._get_params()
-        self._set_rm_modes: Dict[List[float]] or None = None
+        self._set_rm_modes: Dict[str, List[float]] or None = None
         super().__init__()
 
     def set_observatory_location(self, location: Dict[str, Any]) -> None:
@@ -143,7 +143,7 @@ class CycleTimeCalc(AbstractCycleTime):
         """
         self._rmode = rmode
 
-    def set_rm_modes(self, rm_modes: Dict[List[float]] = None) -> None:
+    def set_rm_modes(self, rm_modes: Dict[str, List[float]] = None) -> None:
         """
         Method set readout modes data.
         :param rm_modes: Rm modes in dict contains telescope id and list of readout modes in MHz in order of index

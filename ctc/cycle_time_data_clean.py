@@ -44,7 +44,7 @@ class CycleTimeDataClean(AbstractCycleTime):
     @staticmethod
     def _build_commands_data(
             data: List[Dict[str, Any]], telescope: str,
-            full_nights_id: Dict[str, Dict[str, Any]], rm_modes: Dict[List[float]] = None) -> Dict[str, Any]:
+            full_nights_id: Dict[str, Dict[str, Any]], rm_modes: Dict[str, List[float]] = None) -> Dict[str, Any]:
         commands_data = {}
         for n_id, m_dict in full_nights_id.items():
             for p_no, q_data in enumerate(data, start=0):
@@ -102,7 +102,7 @@ class CycleTimeDataClean(AbstractCycleTime):
     @staticmethod
     def _build_command_data(
             data: List[Dict[str, Any]], telescope: str, night_id: str,
-            line_start: int, rm_modes: Dict[List[float]] = None) -> Dict[str, Any]:
+            line_start: int, rm_modes: Dict[str, List[float]] = None) -> Dict[str, Any]:
 
         first = data[line_start]
         second = data[line_start + 1]
@@ -165,7 +165,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         return dat
 
     @staticmethod
-    def data_clean(telescope: str, base_folder: str, rm_modes: Dict[List[float]] = None) -> None:
+    def data_clean(telescope: str, base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
         """
         Method reading and cleaning only data from full nights (i.e. complete program) and only new data
         """
@@ -184,7 +184,7 @@ class CycleTimeDataClean(AbstractCycleTime):
                                                        base_folder=base_folder)
 
     @staticmethod
-    def data_clean_all(base_folder: str, rm_modes: Dict[List[float]] = None) -> None:
+    def data_clean_all(base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
         """
         Method clean data for all telescopes and all commands.
         :param base_folder: Path to data folder.
