@@ -32,5 +32,5 @@ class CycleTimeDataBuild(AbstractCycleTime):
         logger.debug(f'Data {self.telescope} saved to log')
         self._data.insert_single_data('utc_date_stamp', str(self._time_stamp().isoformat()))
         self._data.insert_single_data('utc_time_stamp', str(self._time_stamp().timestamp()))
-        self.add_to_file(self.encode_data(self._data.data),
+        self._add_to_file(self._encode_data(self._data.data),
                          self.base_folder, self.raw_file_name(telescope=self.telescope))

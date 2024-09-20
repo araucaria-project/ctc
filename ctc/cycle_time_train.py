@@ -22,9 +22,9 @@ class CycleTimeTrain(AbstractCycleTime):
     def _build_array(data: List[Dict[str, Any]], xory: str) -> np.array or None:
 
         if xory == 'x':
-            w = CycleTimeTrain.X_COLUMNS
+            w = CycleTimeTrain._X_COLUMNS
         elif xory == 'y':
-            w = CycleTimeTrain.Y_COLUMN
+            w = CycleTimeTrain._Y_COLUMN
         else:
             w = []
         l1 = []
@@ -43,7 +43,7 @@ class CycleTimeTrain(AbstractCycleTime):
         min_record_to_train = CycleTimeTrain._MIN_DATA_RECORDS_TO_TRAIN
         data = CycleTimeTrain.read_file(base_folder,
                                         CycleTimeTrain.clean_data_file_name(telescope=telescope, command=command))
-        parsed_data = CycleTimeTrain.parse_data(data=data)
+        parsed_data = CycleTimeTrain._parse_data(data=data)
         data_x = CycleTimeTrain._build_array(data=parsed_data, xory='x')
         data_y = CycleTimeTrain._build_array(data=parsed_data, xory='y')
         if (data_x is not None) and (data_y is not None) and (len(data_x) >= min_record_to_train):
@@ -54,7 +54,7 @@ class CycleTimeTrain(AbstractCycleTime):
     @staticmethod
     def _save_train_param_to_file(param: Dict[str, Any], telescope: str, command: str, base_folder: str) -> None:
         c = {}
-        for n, m in enumerate(CycleTimeTrain.X_COLUMNS, start=0):
+        for n, m in enumerate(CycleTimeTrain._X_COLUMNS, start=0):
             c[m] = param['coef'][n]
         dat = OrderedDict({
             'train_utc_time_stamp': str(CycleTimeTrain._time_stamp().isoformat()),
@@ -63,11 +63,11 @@ class CycleTimeTrain(AbstractCycleTime):
             'r2': param['r2']
         })
 
-        CycleTimeTrain.add_to_file(data=CycleTimeTrain.encode_data(data=dat),
+        CycleTimeTrain._add_to_file(data=CycleTimeTrain._encode_data(data=dat),
                                    folder=base_folder,
-                                   file_name=CycleTimeTrain._train_param_file_name(
+                                   file_name=CycleTimeTrain.train_param_file_name(
                                        telescope=telescope, command=command))
-        CycleTimeTrain.add_to_file(data=CycleTimeTrain.encode_data(data=dat),
+        CycleTimeTrain._add_to_file(data=CycleTimeTrain._encode_data(data=dat),
                                    folder=base_folder,
                                    file_name=CycleTimeTrain.train_param_last_file_name(telescope=telescope,
                                                                                        command=command),

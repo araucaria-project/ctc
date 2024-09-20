@@ -16,23 +16,20 @@ class CycleTimeCalc(AbstractCycleTime):
     This class represent cycle time calculator (CTC).
     CTC base on machine learning module.
     To prepare proper parameters, CTC need steps:
-    1. CycleTimeDataBuild is implemented inside planrunner, mostly in Command and NightPlan classes, to get all need
-     info a parameters values. After collection it save data to files (every telescope in different file).
-    2. CycleTimeDataClean is run at end of night program (not skipped program) to select, clean, and distributed to
-     separate files. Module separate commands and telescopes to different files, and it is taking only data from
-     complete programs (nights) to prevent some error and incomplete data. It also has mechanism to do not take
-     data from same nights, to do not double operations.
-    3. CycleTimeTrain is also run at end of night program (not skipped program). It is machine learning module built
-     on linear regression. Parameters used to training are selected with care and supported by analyses. To aloud to
-     train data, it has to be at least 10 records. If there is more data, the parameters will be more accurate.
+    1. CycleTimeDataBuild is implemented inside plan runner, mostly in Command and NightPlan classes, to get all need
+     data. After collection, it saves data to files (every telescope in different file).
+    2. CycleTimeDataClean is run to select, clean, and distribute data from raw data to
+     separate files. It also has mechanism to do not take data from same nights, to do not double operations.
+    3. CycleTimeTrain is machine learning module built on linear regression. Parameters used to training are selected
+     with care and supported by analyses. To aloud to train data, it has to be at least 10 records.
+     If there is more data, the parameters will be more accurate.
     4. CycleTimeCalc is main class, used to calculate cycle time. Calculator use trained parameters prepared from
      previous observations. If there is no parameters to use, calculator backs 0.0 time length. For WAIT command
      calculator backs time strait, without any other calc. Calculator sets start_time at time when instance is call,
-     but it can be changed by set_start_time. This parameter is important, because it will be taken to calculate
-     telescope position from ra and dec coordinates. To make calculation more accurate, please also use
+     but it can be changed by set_start_time.To make calculation more accurate, please also use
      set_observatory_location (default is oca), set_epoch (default is 2000), set_start_rmode (default is 0),
-     set_telescope_start_az_alt (default is 0 70) and set_dome_start_az (default is 0). If You want to calculate
-     if operations are below alt limit (and get 0.0 time because of skipping) please set set_skipping to True.
+     set_telescope_start_az_alt (default is 0 70) and set_dome_start_az (default is 0). If operations are below alt
+      limit (and get 0.0 time because of skipping) please set set_skipping to True.
      You can also change alt limit by alt_limit method (default is set to 15.0).
      Example:
          c = CycleTimeCalc('dev')
@@ -59,18 +56,19 @@ class CycleTimeCalc(AbstractCycleTime):
         self._epoch: str = '2000'
         self._skipping: bool = False
         self._alt_limit: float = 15.0
-        self._observatory_location: Dict[str, Any] = {'latitude': -24.598056,
-                                                      'longitude': -70.196389,
-                                                      'elevation': 2817}
+        self._observatory_location: Dict[str, Any] = {
+            'latitude': -24.598056, 'longitude': -70.196389, 'elevation': 2817
+        }
         self._start_time: datetime.datetime = datetime.datetime.utcnow()
         self._time_length_list: List[float] = []
         self._mk_dirs(self.base_folder)
         self._get_params()
+        self._set_rm_modes: Dict[List[float]] or None = None
         super().__init__()
 
     def set_observatory_location(self, location: Dict[str, Any]) -> None:
         """
-        Set observatory location, default is oca location
+        Set observatory location, default is OCM location.
         :param location: dict of location, like: {'latitude': -24.598056, 'longitude': -70.196389, 'elevation': 2817}
         """
         self._observatory_location = location
@@ -83,25 +81,35 @@ class CycleTimeCalc(AbstractCycleTime):
         self._epoch = epoch
 
     def set_alt_limit(self, alt_limit: float) -> None:
+        """
+        Set lower alt limit, with is used to skip calculation for operations below this limit.
+        :param alt_limit: Lower alt limit in deg (float).
+        :return: None
+        """
         self._alt_limit = alt_limit
 
     def set_skipping(self, skipping: bool) -> None:
+        """
+        Set skip calculation for operations below alt limit.
+        :param skipping: True / False (bool).
+        :return: None
+        """
         self._skipping = skipping
 
     @property
-    def avialable_param_telesc(self) -> Dict[str, Any] or None:
+    def _avialable_param_telesc(self) -> Dict[str, Any] or None:
         if self.telescope in self.available_param.keys():
             return self.available_param[self.telescope]
         else:
             return None
 
     @property
-    def avialable_param_telesc_commands(self) -> List[str]:
+    def _avialable_param_telesc_commands(self) -> List[str]:
         li = []
-        if self.avialable_param_telesc:
-            for ke, val in self.avialable_param_telesc.items():
+        if self._avialable_param_telesc:
+            for ke, val in self._avialable_param_telesc.items():
                 li.append(ke)
-        for n in CycleTimeCalc.NO_TRAIN_COMMANDS:
+        for n in CycleTimeCalc._NO_TRAIN_COMMANDS:
             if n in li:
                 li.remove(n)
         return li
@@ -109,32 +117,75 @@ class CycleTimeCalc(AbstractCycleTime):
     def _get_params(self) -> None:
         for t in CycleTimeCalc.get_list_telesc(file_type='train_param_last', base_folder=self.base_folder):
             self.available_param[t] = {}
-            for co in CycleTimeCalc.get_list_commands(telescope=t, file_type='train_param_last',
-                                                      base_folder=self.base_folder):
+            for co in CycleTimeCalc.get_list_commands(
+                    telescope=t, file_type='train_param_last', base_folder=self.base_folder):
                 data = self.get_last_params(telescope=t, command=co)
                 self.available_param[t][co] = data
 
 
     def get_last_params(self, telescope: str, command: str) -> Dict[str, Any]:
-        data = CycleTimeCalc.read_file(self.base_folder,
-                                       CycleTimeCalc.train_param_last_file_name(telescope=telescope, command=command))
-        return CycleTimeCalc.parse_data(data=data)[-1]
+        """
+        Method returns last trained parameters for selected telescope and command.
+        :param telescope: Telescope id (str).
+        :param command: Command name (str)
+        :return: Dictionary of trained parameters.
+        """
+        data = CycleTimeCalc.read_file(
+            self.base_folder, CycleTimeCalc.train_param_last_file_name(telescope=telescope, command=command)
+        )
+        return CycleTimeCalc._parse_data(data=data)[-1]
 
     def set_start_rmode(self, rmode: int) -> None:
+        """
+        Method set readout mode index.
+        :param rmode: Put index of readout mode in camera readout modes list (index starts from 0).
+        :return: None
+        """
         self._rmode = rmode
+
+    def set_rm_modes(self, rm_modes: Dict[List[float]] = None) -> None:
+        """
+        Method set readout modes data.
+        :param rm_modes: Rm modes in dict contains telescope id and list of readout modes in MHz in order of index
+            setup in camera: {
+            "dev": [5, 2, 1, 0.1, 0.1, 0.2, 0.2],
+            "sim": [5, 3, 2, 1, 0.1, 0.1, 0.05]
+            }
+            For example for telescope "dev", value 1MHz persist on index 2 in camera readout modes list.
+        :return: None
+        """
+        self._set_rm_modes = rm_modes
 
     @property
     def _rm_mode_inv_mhz(self) -> float:
-        return CycleTimeCalc._rm_mode_inverse_mhz(rm_mode=self._rmode, telescope=self.telescope)
+        return CycleTimeCalc._rm_mode_inverse_mhz(
+            rm_mode=self._rmode, telescope=self.telescope, rm_modes=self._set_rm_modes
+        )
 
     def set_start_time(self, utc_time_stamp: datetime.datetime) -> None:
+        """
+        Set start time.
+        :param utc_time_stamp: Put utc timestamp (datetime).
+        :return: None
+        """
         self._start_time = utc_time_stamp
 
     def set_telescope_start_az_alt(self, az: float, alt: float) -> None:
+        """
+        Set mount az alt start position in deg (for more precise prediction).
+        :param az: Mount azimuth in deg (float).
+        :param alt: Mount altitude in deg (float).
+        :return: None
+        """
         self._alt_mount = alt
         self._az_mount = az
 
     def set_dome_start_az(self, az: float) -> None:
+        """
+        Set dome start position in deg (for more precise prediction).
+        :param az: Dome azimuth in deg (float).
+        :return: None
+        """
         self._az_dome = az
 
     def _mount_altaz_target(self, command_dict: Dict[str, Any]) -> Dict[str, float] or None:
@@ -307,9 +358,9 @@ class CycleTimeCalc(AbstractCycleTime):
 
     def calc_time(self, command_dict: Union[Dict[str, Any], str]) -> float or None:
         """
-        Method calculate time for one command and adds it to self._time_length
-        :param command_dict: command_dict parsed by pyaraucaria obs_plan_parser
-        :return: operation time in float
+        Method calculate time for one command.
+        :param command_dict: command_dict parsed by pyaraucaria obs_plan_parser or command string.
+        :return: operation time in seconds (float).
         """
         tim = 0.0
         if isinstance(command_dict, str):
@@ -325,9 +376,9 @@ class CycleTimeCalc(AbstractCycleTime):
             raise TypeError
 
         try:
-            if command_dict['command_name'] in self.avialable_param_telesc_commands:
+            if command_dict['command_name'] in self._avialable_param_telesc_commands:
                 tim = self._calc_time_no_wait_commands(command_dict=command_dict)
-            elif command_dict['command_name'] in CycleTimeCalc.NO_TRAIN_COMMANDS:
+            elif command_dict['command_name'] in CycleTimeCalc._NO_TRAIN_COMMANDS:
                 tim = self._calc_time_wait_command(command_dict=command_dict)
             else:
                 logger.debug(f'Cannot calculate time, lack of params')
@@ -338,18 +389,34 @@ class CycleTimeCalc(AbstractCycleTime):
 
     @property
     def time_lenght_sec(self) -> float:
+        """
+        Sum of accumulated time predictions.
+        :return: Sum of accumulated time predictions in seconds (float).
+        """
         return self._time_length
 
     @property
     def time_lenght_min(self) -> float:
+        """
+        Sum of accumulated time predictions.
+        :return: Sum of accumulated time predictions in minutes (float).
+        """
         return round(self._time_length/60, 1)
 
     @property
     def finnish_time_utc(self) -> str:
+        """
+        Operation sequence finnish time UTC.
+        :return: Str operation sequence finnish time UTC.
+        """
         return str(self._start_time + datetime.timedelta(seconds=self._time_length))
 
     @property
     def time_list(self) -> List[float]:
+        """
+        List of accumulated time predictions.
+        :return: List of accumulated time predictions.
+        """
         return self._time_length_list
 
     def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> float or None:
@@ -368,6 +435,10 @@ class CycleTimeCalc(AbstractCycleTime):
             return None
 
     def reset_time(self) -> None:
+        """
+        Reset time accumulated during time calculation.
+        :return: None
+        """
         self._start_time = datetime.datetime.utcnow()
         self._time_length_list = []
         self._time_length = 0

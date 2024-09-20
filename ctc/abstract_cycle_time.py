@@ -17,22 +17,28 @@ class AbstractCycleTime(ABC):
     This class represent abstract time data
     """
 
-    FILE_NAMES = {'raw_data': 'raw_data.txt', 'clean_data': 'clean_data.txt',
-                  'night_verif': 'night_verif.txt', 'train_param': 'train_param.txt',
-                  'train_param_last': 'train_param_last.txt'}
+    _FILE_NAMES = {
+        'raw_data': 'raw_data.txt', 'clean_data': 'clean_data.txt',
+        'night_verif': 'night_verif.txt', 'train_param': 'train_param.txt',
+        'train_param_last': 'train_param_last.txt'
+    }
 
-    RM_MODES_MHZ = {"zb08": [5, 3, 1, 0.05],
-                    "jk15": [4, 2, 1, 1, 0.1, 0.1],
-                    "wk06": [5, 3, 1, 0.05],
-                    "dev": [1, 1, 1, 1, 1, 1, 1],
-                    "sim": [1, 1, 1, 1, 1, 1, 1],
-                    "default": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}
-    DATA_CLEAN_ORDER = ['night_id', 'command_name', 'start_utc_date_stamp', 'cycle_time', 'dome_distance',
-                        'mount_distance', 'exposure_time_sum', 'filter_changes', 'rmmode_expno', 'dither_expno']
-    X_COLUMNS = DATA_CLEAN_ORDER[4:]
-    Y_COLUMN = DATA_CLEAN_ORDER[3]
-    POSSIBLE_DITHER = ['OBJECT', 'SNAP']
-    NO_TRAIN_COMMANDS = ['WAIT']
+    _DEFAULT_RM_MODES_MHZ = {
+        "zb08": [5, 3, 1, 0.05],
+        "jk15": [4, 2, 1, 1, 0.1, 0.1],
+        "wk06": [5, 3, 1, 0.05],
+        "dev": [1, 1, 1, 1, 1, 1, 1],
+        "sim": [1, 1, 1, 1, 1, 1, 1],
+        "default": [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]}
+
+    _DATA_CLEAN_ORDER = [
+        'night_id', 'command_name', 'start_utc_date_stamp', 'cycle_time', 'dome_distance',
+        'mount_distance', 'exposure_time_sum', 'filter_changes', 'rmmode_expno', 'dither_expno'
+    ]
+    _X_COLUMNS = _DATA_CLEAN_ORDER[4:]
+    _Y_COLUMN = _DATA_CLEAN_ORDER[3]
+    _POSSIBLE_DITHER = ['OBJECT', 'SNAP']
+    _NO_TRAIN_COMMANDS = ['WAIT']
 
     @staticmethod
     def get_list_telesc(file_type: str, base_folder: str) -> List[str]:
@@ -41,7 +47,7 @@ class AbstractCycleTime(ABC):
             l_dir = os.listdir(base_folder)
 
             for n in l_dir:
-                if AbstractCycleTime.FILE_NAMES[file_type] in n and re.fullmatch(pattern=r'\w\w..?_.*.txt', string=n):
+                if AbstractCycleTime._FILE_NAMES[file_type] in n and re.fullmatch(pattern=r'\w\w..?_.*.txt', string=n):
                     tel = n.split('_')[0]
                     if tel not in tel_lst:
                         tel_lst.append(tel)
@@ -55,47 +61,47 @@ class AbstractCycleTime(ABC):
         try:
             l_dir = os.listdir(base_folder)
             for n in l_dir:
-                if (AbstractCycleTime.FILE_NAMES[file_type] in n) and (telescope in n):
+                if (AbstractCycleTime._FILE_NAMES[file_type] in n) and (telescope in n):
                     com_lst.append(n.split('_')[1])
         except (FileExistsError, FileNotFoundError):
             pass
         return com_lst
 
     @staticmethod
-    def encode_data(data: Dict or List) -> str:
+    def _encode_data(data: Dict or List) -> str:
         return json.dumps(data)
 
     @staticmethod
-    def decode_data(data: str) -> Dict or List:
+    def _decode_data(data: str) -> Dict or List:
         return json.loads(data)
 
     @staticmethod
     def raw_file_name(telescope: str) -> str:
-        return f'{telescope}_{AbstractCycleTime.FILE_NAMES["raw_data"]}'
+        return f'{telescope}_{AbstractCycleTime._FILE_NAMES["raw_data"]}'
 
     @staticmethod
     def night_verif_file_name(telescope: str)  -> str:
-        return f'{telescope}_{AbstractCycleTime.FILE_NAMES["night_verif"]}'
+        return f'{telescope}_{AbstractCycleTime._FILE_NAMES["night_verif"]}'
 
     @staticmethod
     def clean_data_file_name(telescope: str , command: str) -> str:
-        return f'{telescope}_{command}_{AbstractCycleTime.FILE_NAMES["clean_data"]}'
+        return f'{telescope}_{command}_{AbstractCycleTime._FILE_NAMES["clean_data"]}'
 
     @staticmethod
-    def _train_param_file_name(telescope: str, command: str) -> str:
-        return f'{telescope}_{command}_{AbstractCycleTime.FILE_NAMES["train_param"]}'
+    def train_param_file_name(telescope: str, command: str) -> str:
+        return f'{telescope}_{command}_{AbstractCycleTime._FILE_NAMES["train_param"]}'
 
     @staticmethod
     def train_param_last_file_name(telescope: str, command: str) -> str:
-        return f'{telescope}_{command}_{AbstractCycleTime.FILE_NAMES["train_param_last"]}'
+        return f'{telescope}_{command}_{AbstractCycleTime._FILE_NAMES["train_param_last"]}'
 
     @staticmethod
-    def parse_data(data: str) -> List:
+    def _parse_data(data: str) -> List:
         ret = []
         s = data.split('\n')
         for n in s:
             if len(n) > 1:
-                ret.append(AbstractCycleTime.decode_data(n))
+                ret.append(AbstractCycleTime._decode_data(n))
         return ret
 
     @staticmethod
@@ -108,7 +114,7 @@ class AbstractCycleTime(ABC):
                          f'please create folder manually and grant permissions')
 
     @staticmethod
-    def add_to_file(data: str, folder: str, file_name: str, mode: str = "a") -> None:
+    def _add_to_file(data: str, folder: str, file_name: str, mode: str = "a") -> None:
         try:
             f = open(os.path.join(folder, file_name), mode, encoding='utf-8')
             f.write(f'{data}')
@@ -142,9 +148,9 @@ class AbstractCycleTime(ABC):
             return 1
 
     @staticmethod
-    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[float] = None) -> float or int or None:
+    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[List[float]] = None) -> float or int or None:
         if not rm_modes:
-            rm_modes = AbstractCycleTime.RM_MODES_MHZ
+            rm_modes = AbstractCycleTime._DEFAULT_RM_MODES_MHZ
         if rm_modes is not None:
             if telescope in rm_modes.keys():
                 if len(rm_modes[telescope]) - 1 >= rm_mode:
@@ -348,7 +354,7 @@ class AbstractCycleTime(ABC):
             else:
                 return 0
 
-        elif command_dict['command_name'] in AbstractCycleTime.POSSIBLE_DITHER:
+        elif command_dict['command_name'] in AbstractCycleTime._POSSIBLE_DITHER:
             if 'dither' not in kw.keys():
                 return 0
             elif 'dither' in kw.keys() and kw['dither'] != 'off':
