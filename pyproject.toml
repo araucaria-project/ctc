@@ -8,7 +8,7 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python =  ">=3.9,<4.0"
-numpy = "^2.1.1"
+numpy = "^2.0.1"
 scikit-learn = "^1.5.2"
 pyaraucaria = {git = "https://github.com/araucaria-project/pyaraucaria.git"}
 
