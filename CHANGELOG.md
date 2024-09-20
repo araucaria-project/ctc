@@ -11,6 +11,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 - First production release
 - Documentation
+- readout modes input
 
 ### Changed
 - Changed some methods for private
