@@ -43,7 +43,7 @@ class CycleTimeCalc(AbstractCycleTime):
          c.finnish_time_utc() --> you get utc date_time when program will finish
     """
 
-    def __init__(self, telescope: str, base_folder: str) -> None:
+    def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
         self._rmode: int = 0
         self._current_filter: str = ''
@@ -59,11 +59,12 @@ class CycleTimeCalc(AbstractCycleTime):
         self._observatory_location: Dict[str, Any] = {
             'latitude': -24.598056, 'longitude': -70.196389, 'elevation': 2817
         }
-        self._start_time: datetime.datetime = datetime.datetime.utcnow()
+        self._start_time: datetime.datetime = datetime.datetime.now(datetime.UTC)
         self._time_length_list: List[float] = []
         self._mk_dirs(self.base_folder)
         self._get_params()
         self._set_rm_modes: Dict[str, List[float]] or None = None
+        self.tpg = tpg
         super().__init__()
 
     def set_observatory_location(self, location: Dict[str, Any]) -> None:
@@ -227,12 +228,11 @@ class CycleTimeCalc(AbstractCycleTime):
 
     def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> float or None:
         azalt = self._mount_altaz_target(command_dict=command_dict)
-        if azalt is not None:
+        if azalt is not None and not self.tpg:
             if (azalt['alt'] >= self._alt_limit) or (azalt['alt'] < self._alt_limit and self._skipping is False):
-                mount_alt_az_dist = CycleTimeCalc._alt_az_distance(start_alt=self._alt_mount,
-                                                                  end_alt=azalt['alt'],
-                                                                  start_az=self._az_mount,
-                                                                  end_az=azalt['az'])
+                mount_alt_az_dist = CycleTimeCalc._alt_az_distance(
+                    start_alt=self._alt_mount, end_alt=azalt['alt'], start_az=self._az_mount, end_az=azalt['az']
+                )
                 dome_az_dist = CycleTimeCalc._az_distance(start=self._az_dome, end=azalt['az'])
                 self._alt_mount = azalt['alt']
                 self._az_mount = azalt['az']
@@ -240,6 +240,14 @@ class CycleTimeCalc(AbstractCycleTime):
             else:
                 logger.debug(f'Alt is under lower limit, no time calculation')
                 return 0.0
+        elif self.tpg:
+            try:
+                dome_az_dist = self.available_param[self.telescope][command_dict['command_name']]['dome_average_dist']
+                mount_alt_az_dist = \
+                    self.available_param[self.telescope][command_dict['command_name']]['mount_average_dist']
+            except (LookupError, TypeError):
+                dome_az_dist = 0.0
+                mount_alt_az_dist = 0.0
         else:
             mount_alt_az_dist = 0.0
             dome_az_dist = 0.0

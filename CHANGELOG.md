@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.0.1 - 2024-09-21
+### Added
+- Tpg calculation method option  with average dome and mount distance
 
 ## 1.0.0 - 2024-09-20
 ### Added

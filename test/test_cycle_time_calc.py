@@ -26,7 +26,7 @@ class TestCycleTime(unittest.TestCase):
     def test_from_string(self):
 
         z = CycleTimeCalc('dev', '/data/misc/cycle_time_calc').calc_time("OBJECT alt=45 az=0 seq=3/Red/4")
-        print(z)
+        # print(z)
         self.assertGreater(a=z, b=0)
 
 

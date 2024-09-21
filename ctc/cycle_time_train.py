@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Tuple
 from collections import OrderedDict
 import numpy as np
 from sklearn.linear_model import LinearRegression
@@ -38,16 +38,35 @@ class CycleTimeTrain(AbstractCycleTime):
         return np.asarray(l1)
 
     @staticmethod
+    def calc_dome_mount_average_dist(parsed_data: List[Dict[str, Any]]) -> Tuple[float, float]:
+        li_d = []
+        li_m = []
+        for record in parsed_data:
+            try:
+                li_d.append(record['dome_distance'])
+                li_m.append(record['mount_distance'])
+            except (LookupError, TypeError):
+                pass
+        dome_avr_dist = np.mean(np.array([li_d]))
+        mount_avr_dist = np.mean(np.array([li_m]))
+        return dome_avr_dist, mount_avr_dist
+
+    @staticmethod
     def train_data_command(telescope: str, command: str, base_folder: str) -> None:
         logger.debug(f'Train telelescope: {telescope} command: {command}')
         min_record_to_train = CycleTimeTrain._MIN_DATA_RECORDS_TO_TRAIN
-        data = CycleTimeTrain.read_file(base_folder,
-                                        CycleTimeTrain.clean_data_file_name(telescope=telescope, command=command))
+        data = CycleTimeTrain.read_file(
+            base_folder, CycleTimeTrain.clean_data_file_name(telescope=telescope, command=command)
+        )
         parsed_data = CycleTimeTrain._parse_data(data=data)
+        dome_avr_dist, mount_avr_dist = CycleTimeTrain.calc_dome_mount_average_dist(parsed_data=parsed_data)
+
         data_x = CycleTimeTrain._build_array(data=parsed_data, xory='x')
         data_y = CycleTimeTrain._build_array(data=parsed_data, xory='y')
         if (data_x is not None) and (data_y is not None) and (len(data_x) >= min_record_to_train):
             param = CycleTimeTrain._train(data_x=data_x, data_y=data_y)
+            param['dome_average_dist'] = dome_avr_dist
+            param['mount_average_dist'] = mount_avr_dist
             CycleTimeTrain._save_train_param_to_file(param=param, telescope=telescope,
                                                     command=command, base_folder=base_folder)
 
@@ -60,7 +79,9 @@ class CycleTimeTrain(AbstractCycleTime):
             'train_utc_time_stamp': str(CycleTimeTrain._time_stamp().isoformat()),
             'coef': c,
             'intercept': param['intercept'],
-            'r2': param['r2']
+            'r2': param['r2'],
+            'dome_average_dist': param['dome_average_dist'],
+            'mount_average_dist': param['mount_average_dist']
         })
 
         CycleTimeTrain._add_to_file(data=CycleTimeTrain._encode_data(data=dat),
