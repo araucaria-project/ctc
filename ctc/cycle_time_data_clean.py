@@ -48,6 +48,8 @@ class CycleTimeDataClean(AbstractCycleTime):
         commands_data = {}
         for n_id, m_dict in full_nights_id.items():
             for p_no, q_data in enumerate(data, start=0):
+                if not isinstance(m_dict['started'], int) or not isinstance(m_dict['ended'], int):
+                    continue
                 if m_dict['started'] < p_no < m_dict['ended']:
                     if q_data['command_name'] not in commands_data.keys():
                         commands_data[q_data['command_name']] = []
