@@ -12,7 +12,6 @@ class CTData:
     """
 
     def __init__(self) -> None:
-        self._str_data: str = ''
         self._data: Dict[str, Any] = {}
         self._lock = asyncio.Lock()
         super().__init__()
@@ -28,7 +27,3 @@ class CTData:
     async def get_data(self) -> Dict[str, Any]:
         async with self._lock:
             return self._data
-
-    async def get_str_data(self) -> str:
-        async with self._lock:
-            return self._str_data
