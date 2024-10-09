@@ -1,3 +1,4 @@
+import asyncio
 from typing import Dict, Any
 import logging
 
@@ -13,21 +14,23 @@ class CTData:
     def __init__(self) -> None:
         self._str_data: str = ''
         self._data: Dict[str, Any] = {}
+        self._lock = asyncio.Lock()
         super().__init__()
 
-    def insert_single_data(self, name: str, value: Any) -> None:
-        self._data[name] = str(value)
+    async def insert_single_data(self, name: str, value: Any) -> None:
+        async with self._lock:
+            self._data[name] = str(value)
 
-    def insert_data_from_dict(self, dict: Dict[str, Any]) -> None:
-        self._data = self._data | dict
-
-    def insert_str_data(self, value: str) -> None:
-        self._data_str = value
+    async def insert_data_from_dict(self, dict: Dict[str, Any]) -> None:
+        async with self._lock:
+            self._data = self._data | dict
 
     @property
     def data(self) -> Dict[str, Any]:
-        return self._data
+        async with self._lock:
+            return self._data
 
     @property
     def str_data(self) -> str:
-        return self._str_data
+        async with self._lock:
+            return self._str_data

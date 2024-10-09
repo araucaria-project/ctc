@@ -19,18 +19,18 @@ class CycleTimeDataBuild(AbstractCycleTime):
         super().__init__()
         self._mk_dirs(base_folder=base_folder)
 
-
-    def insert_data(self, name: str, value: Any) -> None:
+    async def insert_data(self, name: str, value: Any) -> None:
         logger.debug(f'Data inserted: {name} {value}')
-        self._data.insert_single_data(name=name, value=value)
+        await self._data.insert_single_data(name=name, value=value)
 
-    def insert_data_dict(self, dict: Dict[str, Any]) -> None:
+    async def insert_data_dict(self, dict: Dict[str, Any]) -> None:
         logger.debug(f'Data inserted from dict: {dict}')
-        self._data.insert_data_from_dict(dict=dict)
+        await self._data.insert_data_from_dict(dict=dict)
 
-    def save_to_log(self) -> None:
+    async def save_to_log(self) -> None:
         logger.debug(f'Data {self.telescope} saved to log')
-        self._data.insert_single_data('utc_date_stamp', str(self._time_stamp().isoformat()))
-        self._data.insert_single_data('utc_time_stamp', str(self._time_stamp().timestamp()))
-        self._add_to_file(self._encode_data(self._data.data),
-                         self.base_folder, self.raw_file_name(telescope=self.telescope))
+        await self._data.insert_single_data('utc_date_stamp', str(self._time_stamp().isoformat()))
+        await self._data.insert_single_data('utc_time_stamp', str(self._time_stamp().timestamp()))
+        self._add_to_file(
+            self._encode_data(self._data.data), self.base_folder, self.raw_file_name(telescope=self.telescope)
+        )
