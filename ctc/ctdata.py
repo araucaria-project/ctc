@@ -25,12 +25,10 @@ class CTData:
         async with self._lock:
             self._data = self._data | dict
 
-    @property
-    def data(self) -> Dict[str, Any]:
+    async def get_data(self) -> Dict[str, Any]:
         async with self._lock:
             return self._data
 
-    @property
-    def str_data(self) -> str:
+    async def get_str_data(self) -> str:
         async with self._lock:
             return self._str_data
