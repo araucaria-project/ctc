@@ -32,5 +32,7 @@ class CycleTimeDataBuild(AbstractCycleTime):
         await self._data.insert_single_data('utc_date_stamp', str(self._time_stamp().isoformat()))
         await self._data.insert_single_data('utc_time_stamp', str(self._time_stamp().timestamp()))
         self._add_to_file(
-            self._encode_data(self._data.data), self.base_folder, self.raw_file_name(telescope=self.telescope)
+            data=self._encode_data(await self._data.get_data()),
+            folder=self.base_folder,
+            file_name=self.raw_file_name(telescope=self.telescope)
         )
