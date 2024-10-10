@@ -7,6 +7,8 @@ import datetime
 import math
 import numpy as np
 import json
+from datetime import datetime
+import aiofile
 
 
 logger = logging.getLogger(__name__.rsplit('.')[-1])
@@ -365,3 +367,28 @@ class AbstractCycleTime(ABC):
                 return 0
         else:
             return 1
+
+    @staticmethod
+    async def last_clean_train_fn() -> str:
+        return f'last_clean_train.txt'
+
+    @staticmethod
+    async def save_last_clean_train_fle(base_folder: str):
+        path = os.path.join(base_folder, await AbstractCycleTime.last_clean_train_fn())
+        async with aiofile.async_open(path, 'w+') as afp:
+            await afp.write("")
+
+    @staticmethod
+    async def if_last_clean_train_was_today(base_folder: str):
+        path = os.path.join(base_folder, await AbstractCycleTime.last_clean_train_fn())
+        try:
+            mod_time = os.path.getmtime(os.path.join(path))
+        except OSError:
+            return False
+        mod_time_readable = datetime.fromtimestamp(mod_time)
+        current_date = datetime.now().date()
+        modification_date = mod_time_readable.date()
+        if modification_date == current_date:
+            return True
+        else:
+            return False
