@@ -382,6 +382,7 @@ class AbstractCycleTime(ABC):
     @staticmethod
     async def if_last_clean_train_was_today(base_folder: str):
         path = os.path.join(base_folder, await AbstractCycleTime.last_clean_train_fn())
+        logger.info(f'Reading file modification time {path}')
         try:
             mod_time = os.path.getmtime(os.path.join(path))
         except OSError:
