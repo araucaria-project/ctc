@@ -218,5 +218,4 @@ class CycleTimeDataClean(AbstractCycleTime):
         async for t in AsyncListIter(tel):
             logger.info(f'Data clean for telescope: {t}')
             await CycleTimeDataClean.data_clean(telescope=t, base_folder=base_folder, rm_modes=rm_modes)
-        await CycleTimeDataClean.save_last_clean_train_fle(base_folder=base_folder)
         logger.info(f'Data clean done in {time.time() - t_0:.1f}')
