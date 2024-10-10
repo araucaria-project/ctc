@@ -1,3 +1,4 @@
+import time
 from typing import Dict, Any, List
 from ctc.abstract_cycle_time import AbstractCycleTime
 import logging
@@ -206,8 +207,10 @@ class CycleTimeDataClean(AbstractCycleTime):
             For example for telescope "dev", value 1MHz persist on index 2 in camera readout modes list.
         :return: None
         """
+        t_0 = time.time()
         logger.debug(f'Data clean for all telescopes and all commands type')
         tel = CycleTimeDataClean.get_list_telesc(file_type='raw_data', base_folder=base_folder)
         async for t in AsyncListIter(tel):
             logger.info(f'Data clean for telescope: {t}')
             await CycleTimeDataClean.data_clean(telescope=t, base_folder=base_folder, rm_modes=rm_modes)
+        logger.info(f'Data clean done in {time.time() - t_0:.1f}')
