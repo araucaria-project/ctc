@@ -377,6 +377,7 @@ class AbstractCycleTime(ABC):
         path = os.path.join(base_folder, await AbstractCycleTime.last_clean_train_fn())
         async with aiofile.async_open(path, 'w+') as afp:
             await afp.write("")
+        logger.info(f'File saved {path}')
 
     @staticmethod
     async def if_last_clean_train_was_today(base_folder: str):
