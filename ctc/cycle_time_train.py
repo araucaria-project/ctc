@@ -1,3 +1,4 @@
+import time
 from typing import Dict, Any, List, Tuple
 from collections import OrderedDict
 import numpy as np
@@ -108,9 +109,12 @@ class CycleTimeTrain(AbstractCycleTime):
 
     @staticmethod
     async def train_all_telesc_all_commands(base_folder: str) -> None:
+        t_0 = time.time()
         logger.info(f'Train all telescopes and all commands type')
         async for t in AsyncListIter(CycleTimeTrain.get_list_telesc(file_type='clean_data', base_folder=base_folder)):
+            logger.info(f'Data train for telescope: {t}')
             async for c in AsyncListIter(CycleTimeTrain.get_list_commands(
                     telescope=t, file_type='clean_data', base_folder=base_folder
             )):
                 await CycleTimeTrain.train_data_command(telescope=t, command=c, base_folder=base_folder)
+        logger.info(f'Training done in {time.time() - t_0:.1f}')
