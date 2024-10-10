@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ctc"
-version = "1.0.10"
+version = "1.0.11"
 description = "Telescope Cycle Time Calculator"
 authors = ["MMiirrkk <cot@wp.pl>"]
 license = "MIT"

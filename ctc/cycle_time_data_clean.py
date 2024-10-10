@@ -210,7 +210,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         :return: None
         """
         t_0 = time.time()
-        if skip_if_was_today and CycleTimeDataClean.if_last_clean_train_was_today(base_folder=base_folder):
+        if skip_if_was_today and await CycleTimeDataClean.if_last_clean_train_was_today(base_folder=base_folder):
             logger.info(f'Cleaning was done today, skipping.')
             return
         logger.debug(f'Data clean for all telescopes and all commands type')
