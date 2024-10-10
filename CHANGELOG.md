@@ -6,10 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
-## 1.0.13 - 2024-10-10
+## 1.0.14 - 2024-10-10
 ### Changed
 - Changing for asyncio (all ok, only calculator still sync)
 - Add option to train once per day
+- Add aiofiles as async file reader / writer
 
 ## 1.0.1 - 2024-09-21
 ### Added

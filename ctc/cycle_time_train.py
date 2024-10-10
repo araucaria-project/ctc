@@ -57,10 +57,10 @@ class CycleTimeTrain(AbstractCycleTime):
     async def train_data_command(telescope: str, command: str, base_folder: str) -> None:
         logger.debug(f'Train telelescope: {telescope} command: {command}')
         min_record_to_train = CycleTimeTrain._MIN_DATA_RECORDS_TO_TRAIN
-        data = CycleTimeTrain.read_file(
+        data = await CycleTimeTrain.a_read_file(
             base_folder, CycleTimeTrain.clean_data_file_name(telescope=telescope, command=command)
         )
-        parsed_data = CycleTimeTrain._parse_data(data=data)
+        parsed_data = await CycleTimeTrain._a_parse_data(data=data)
         dome_avr_dist, mount_avr_dist = await CycleTimeTrain.calc_dome_mount_average_dist(parsed_data=parsed_data)
         data_x = await CycleTimeTrain._build_array(data=parsed_data, xory='x')
         data_y = await CycleTimeTrain._build_array(data=parsed_data, xory='y')
@@ -86,12 +86,12 @@ class CycleTimeTrain(AbstractCycleTime):
             'mount_average_dist': param['mount_average_dist']
         })
 
-        CycleTimeTrain._add_to_file(
+        await CycleTimeTrain._a_add_to_file(
             data=CycleTimeTrain._encode_data(data=dat),
             folder=base_folder,
             file_name=CycleTimeTrain.train_param_file_name(telescope=telescope, command=command)
         )
-        CycleTimeTrain._add_to_file(
+        await CycleTimeTrain._a_add_to_file(
             data=CycleTimeTrain._encode_data(data=dat),
             folder=base_folder,
             file_name=CycleTimeTrain.train_param_last_file_name(telescope=telescope, command=command),
@@ -101,6 +101,7 @@ class CycleTimeTrain(AbstractCycleTime):
 
     @staticmethod
     async def _train(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
+        # TODO maybe move to asyncio executor
         model = LinearRegression()
         x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, random_state=123, test_size=0.3)
         model.fit(x_train, y_train)
