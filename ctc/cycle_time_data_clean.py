@@ -195,7 +195,8 @@ class CycleTimeDataClean(AbstractCycleTime):
         )
 
     @staticmethod
-    async def data_clean_all(base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
+    async def data_clean_all(
+            base_folder: str, rm_modes: Dict[str, List[float]] = None, skip_if_was_today: bool = True) -> None:
         """
         Method clean data for all telescopes and all commands.
         :param base_folder: Path to data folder.
@@ -205,12 +206,17 @@ class CycleTimeDataClean(AbstractCycleTime):
             "sim": [5, 3, 2, 1, 0.1, 0.1, 0.05]
             }
             For example for telescope "dev", value 1MHz persist on index 2 in camera readout modes list.
+        :param skip_if_was_today: skip operation if was done today
         :return: None
         """
         t_0 = time.time()
+        if skip_if_was_today and CycleTimeDataClean.if_last_clean_train_was_today(base_folder=base_folder):
+            logger.info(f'Cleaning was done today, skipping.')
+            return
         logger.debug(f'Data clean for all telescopes and all commands type')
         tel = CycleTimeDataClean.get_list_telesc(file_type='raw_data', base_folder=base_folder)
         async for t in AsyncListIter(tel):
             logger.info(f'Data clean for telescope: {t}')
             await CycleTimeDataClean.data_clean(telescope=t, base_folder=base_folder, rm_modes=rm_modes)
+        await CycleTimeDataClean.save_last_clean_train_fle(base_folder=base_folder)
         logger.info(f'Data clean done in {time.time() - t_0:.1f}')

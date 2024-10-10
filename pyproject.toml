@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ctc"
-version = "1.0.7"
+version = "1.0.8"
 description = "Telescope Cycle Time Calculator"
 authors = ["MMiirrkk <cot@wp.pl>"]
 license = "MIT"
@@ -11,6 +11,7 @@ python =  ">=3.9,<4.0"
 numpy = ">=1.22,<2"
 scikit-learn = "^1.5.2"
 pyaraucaria = {git = "https://github.com/araucaria-project/pyaraucaria.git"}
+aiofile = "^3.9.0"
 
 
 [build-system]

@@ -108,8 +108,11 @@ class CycleTimeTrain(AbstractCycleTime):
         return {'r2': r2_score(y_test, y_pred), 'coef': model.coef_[0], 'intercept': model.intercept_[0]}
 
     @staticmethod
-    async def train_all_telesc_all_commands(base_folder: str) -> None:
+    async def train_all_telesc_all_commands(base_folder: str, skip_if_was_today: bool = True) -> None:
         t_0 = time.time()
+        if skip_if_was_today and CycleTimeTrain.if_last_clean_train_was_today(base_folder=base_folder):
+            logger.info(f'Training was done today, skipping.')
+            return
         logger.info(f'Train all telescopes and all commands type')
         async for t in AsyncListIter(CycleTimeTrain.get_list_telesc(file_type='clean_data', base_folder=base_folder)):
             logger.info(f'Data train for telescope: {t}')
@@ -117,4 +120,5 @@ class CycleTimeTrain(AbstractCycleTime):
                     telescope=t, file_type='clean_data', base_folder=base_folder
             )):
                 await CycleTimeTrain.train_data_command(telescope=t, command=c, base_folder=base_folder)
+        await CycleTimeTrain.save_last_clean_train_fle(base_folder=base_folder)
         logger.info(f'Training done in {time.time() - t_0:.1f}')

@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.0.8 - 2024-10-10
+### Changed
+- Changing for asyncio (all ok, only calculator still sync)
+- Add option to train once per day
+
 ## 1.0.1 - 2024-09-21
 ### Added
 - Tpg calculation method option  with average dome and mount distance
