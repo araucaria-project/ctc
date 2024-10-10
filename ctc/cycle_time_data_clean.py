@@ -69,7 +69,7 @@ class CycleTimeDataClean(AbstractCycleTime):
 
     @staticmethod
     async def _verify_nights(full_nights_id: Dict[str, Dict[str, Any]], telescope: str, base_folder: str):
-        f = CycleTimeDataClean.read_file(
+        f = await CycleTimeDataClean.a_read_file(
             folder=base_folder, file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope)
         )
         if f is not None:
@@ -91,7 +91,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         logger.debug(f'Save commands data for telescope: {telescope}')
         async for n in AsyncListIter(list(commands_data.keys())):
             async for m in AsyncListIter(commands_data[n]):
-                CycleTimeDataClean._add_to_file(
+                await CycleTimeDataClean._a_add_to_file(
                     data=CycleTimeDataClean._encode_data(m),
                     folder=base_folder,
                     file_name=CycleTimeDataClean.clean_data_file_name(telescope=telescope, command=n))
@@ -100,7 +100,7 @@ class CycleTimeDataClean(AbstractCycleTime):
                 'random_id': p,
                 'utc_time_stamp': q['utc_time_stamp'],
             })
-            CycleTimeDataClean._add_to_file(
+            await CycleTimeDataClean._a_add_to_file(
                 data=CycleTimeDataClean._encode_data(data=dat),
                 folder=base_folder,
                 file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope))
@@ -163,7 +163,7 @@ class CycleTimeDataClean(AbstractCycleTime):
                             rm_modes=rm_modes
                         ) * CycleTimeDataClean._exposure_number(first),
                     CycleTimeDataClean._DATA_CLEAN_ORDER[9]:
-                        CycleTimeDataClean._dither(first)*CycleTimeDataClean._exposure_number(first),
+                        CycleTimeDataClean._dither(first) * CycleTimeDataClean._exposure_number(first),
 
                 })
             except (KeyError, IndexError, ValueError, TypeError):
@@ -175,11 +175,11 @@ class CycleTimeDataClean(AbstractCycleTime):
         """
         Method reading and cleaning only data from full nights (i.e. complete program) and only new data
         """
-        str_dat = CycleTimeDataClean.read_file(
+        str_dat = await CycleTimeDataClean.a_read_file(
             folder=base_folder,
             file_name=CycleTimeDataClean.raw_file_name(telescope=telescope)
         )
-        parsed_data = CycleTimeDataClean._parse_data(str_dat)
+        parsed_data = await CycleTimeDataClean._a_parse_data(str_dat)
         full_nights_id = await CycleTimeDataClean._find_nights_id(parsed_data)
         full_nights_id = await CycleTimeDataClean._verify_nights(
             full_nights_id=full_nights_id, telescope=telescope, base_folder=base_folder

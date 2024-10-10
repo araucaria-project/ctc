@@ -9,6 +9,7 @@ import numpy as np
 import json
 import aiofile
 
+from ctc.iter_async import AsyncListIter
 
 logger = logging.getLogger(__name__.rsplit('.')[-1])
 
@@ -106,6 +107,15 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
+    async def _a_parse_data(data: str) -> List:
+        ret = []
+        s = data.split('\n')
+        async for n in AsyncListIter(s):
+            if len(n) > 1:
+                ret.append(AbstractCycleTime._decode_data(n))
+        return ret
+
+    @staticmethod
     def _mk_dirs(base_folder: str) -> None:
         try:
             if not os.path.exists(base_folder):
@@ -126,6 +136,17 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
+    async def _a_add_to_file(data: str, folder: str, file_name: str, mode: str = "a") -> None:
+        path = os.path.join(folder, file_name)
+        try:
+            async with aiofile.async_open(file_specifier=path, mode=mode, encoding='utf-8') as afp:
+                await afp.write(f'{data}')
+                await afp.write('\n')
+        except OSError:
+            logger.error(f'Can not add content to file {path}')
+            return None
+
+    @staticmethod
     def read_file(folder: str, file_name: str) -> str or None:
         try:
             f = open(os.path.join(folder, file_name), "r", encoding='utf-8')
@@ -135,6 +156,18 @@ class AbstractCycleTime(ABC):
             return dat
         except (FileExistsError, FileNotFoundError):
             logger.error(f'File {file_name} can not be reached')
+            return None
+
+    @staticmethod
+    async def a_read_file(folder: str, file_name: str) -> str or None:
+        path = os.path.join(folder, file_name)
+        try:
+            async with aiofile.async_open(file_specifier=path, mode="r", encoding='utf-8') as afp:
+                dat = await afp.read()
+            logger.debug(f'File read {path}')
+            return dat
+        except OSError:
+            logger.error(f'Can not open file {path}.')
             return None
 
     @staticmethod
