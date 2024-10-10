@@ -110,7 +110,7 @@ class CycleTimeTrain(AbstractCycleTime):
     @staticmethod
     async def train_all_telesc_all_commands(base_folder: str, skip_if_was_today: bool = True) -> None:
         t_0 = time.time()
-        if skip_if_was_today and CycleTimeTrain.if_last_clean_train_was_today(base_folder=base_folder):
+        if skip_if_was_today and await CycleTimeTrain.if_last_clean_train_was_today(base_folder=base_folder):
             logger.info(f'Training was done today, skipping.')
             return
         logger.info(f'Train all telescopes and all commands type')
