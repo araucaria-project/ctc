@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
-## 1.0.11 - 2024-10-10
+## 1.0.12 - 2024-10-10
 ### Changed
 - Changing for asyncio (all ok, only calculator still sync)
 - Add option to train once per day
