@@ -7,7 +7,6 @@ import datetime
 import math
 import numpy as np
 import json
-from datetime import datetime
 import aiofile
 
 
@@ -387,8 +386,8 @@ class AbstractCycleTime(ABC):
             mod_time = os.path.getmtime(os.path.join(path))
         except OSError:
             return False
-        mod_time_readable = datetime.fromtimestamp(mod_time)
-        current_date = datetime.now().date()
+        mod_time_readable = datetime.datetime.fromtimestamp(mod_time)
+        current_date = datetime.datetime.now().date()
         modification_date = mod_time_readable.date()
         if modification_date == current_date:
             return True
