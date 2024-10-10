@@ -1,9 +1,8 @@
 from typing import Dict, Any, List
-
-from ctc import CycleTimeCalc
 from ctc.abstract_cycle_time import AbstractCycleTime
 import logging
 from collections import OrderedDict
+from ctc.iter_async import AsyncEnumerateIter, AsyncDictItemsIter, AsyncListIter
 
 
 logger = logging.getLogger(__name__.rsplit('.')[-1])
@@ -15,18 +14,20 @@ class CycleTimeDataClean(AbstractCycleTime):
     """
 
     @staticmethod
-    def _find_nights_id(data: List[Any]) -> Dict[str, Dict[str, Any]]:
+    async def _find_nights_id(data: List[Any]) -> Dict[str, Dict[str, Any]]:
         random_id = ''
         full_nights_id = {}
         line_started = None
-        for n, m in enumerate(data, start=0):
+        async for n, m in AsyncEnumerateIter(data):
             if m['command_name'] == 'NIGHTPLAN' and 'done' not in m.keys() and \
                     'skipped' not in m.keys() and random_id != m['random_id']:
                 if line_started is not None:
                     line_ended = n - 1
-                    full_nights_id[random_id] = {'started': line_started,
-                                                 'ended': line_ended,
-                                                 'utc_time_stamp': m["utc_time_stamp"]}
+                    full_nights_id[random_id] = {
+                        'started': line_started,
+                        'ended': line_ended,
+                        'utc_time_stamp': m["utc_time_stamp"]
+                    }
                     line_started = None
                 else:
                     random_id = m['random_id']
@@ -34,20 +35,22 @@ class CycleTimeDataClean(AbstractCycleTime):
             if m['command_name'] == 'NIGHTPLAN' and ('done' in m.keys() or 'skipped' in m.keys()) \
                     and random_id == m['random_id']:
                 line_ended = n
-                full_nights_id[random_id] = {'started': line_started,
-                                             'ended':line_ended,
-                                             'utc_time_stamp': m["utc_time_stamp"]}
+                full_nights_id[random_id] = {
+                    'started': line_started,
+                    'ended':line_ended,
+                    'utc_time_stamp': m["utc_time_stamp"]
+                }
                 line_started = None
         logger.debug(f'Nights id found: {full_nights_id}')
         return full_nights_id
 
     @staticmethod
-    def _build_commands_data(
+    async def _build_commands_data(
             data: List[Dict[str, Any]], telescope: str,
             full_nights_id: Dict[str, Dict[str, Any]], rm_modes: Dict[str, List[float]] = None) -> Dict[str, Any]:
         commands_data = {}
-        for n_id, m_dict in full_nights_id.items():
-            for p_no, q_data in enumerate(data, start=0):
+        async for n_id, m_dict in AsyncDictItemsIter(full_nights_id):
+            async for p_no, q_data in AsyncEnumerateIter(data):
                 if not isinstance(m_dict['started'], int) or not isinstance(m_dict['ended'], int):
                     continue
                 if m_dict['started'] < p_no < m_dict['ended']:
@@ -56,7 +59,7 @@ class CycleTimeDataClean(AbstractCycleTime):
                     if 'done' not in q_data.keys():
                         if q_data['command_name'] not in AbstractCycleTime._NO_TRAIN_COMMANDS:
                             if data[p_no + 1]['skipped'] == 'False':
-                                dat = CycleTimeDataClean._build_command_data(
+                                dat = await CycleTimeDataClean._build_command_data(
                                     data=data, telescope=telescope, night_id=n_id, line_start=p_no, rm_modes=rm_modes
                                 )
                                 if dat is not None:
@@ -64,12 +67,13 @@ class CycleTimeDataClean(AbstractCycleTime):
         return commands_data
 
     @staticmethod
-    def _verify_nights(full_nights_id: Dict[str, Dict[str, Any]], telescope: str, base_folder: str):
-        f = CycleTimeDataClean.read_file(folder=base_folder,
-                                         file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope))
+    async def _verify_nights(full_nights_id: Dict[str, Dict[str, Any]], telescope: str, base_folder: str):
+        f = CycleTimeDataClean.read_file(
+            folder=base_folder, file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope)
+        )
         if f is not None:
             l = f.split('\n')
-            for n in l:
+            async for n in AsyncListIter(l):
                 if len(n) > 1:
                     d = CycleTimeDataClean._decode_data(n)
                     if d['random_id'] in full_nights_id.keys():
@@ -80,18 +84,17 @@ class CycleTimeDataClean(AbstractCycleTime):
         return full_nights_id
 
     @staticmethod
-    def _save_commands_data_to_files(commands_data: Dict[str, Any],
-                                    full_nights_id: Dict[str, Dict[str, Any]],
-                                    telescope: str,
-                                    base_folder: str) -> None:
+    async def _save_commands_data_to_files(
+            commands_data: Dict[str, Any], full_nights_id: Dict[str, Dict[str, Any]],
+            telescope: str, base_folder: str) -> None:
         logger.debug(f'Save commands data for telescope: {telescope}')
-        for n in commands_data.keys():
-            for m in commands_data[n]:
+        async for n in AsyncListIter(list(commands_data.keys())):
+            async for m in AsyncListIter(commands_data[n]):
                 CycleTimeDataClean._add_to_file(
                     data=CycleTimeDataClean._encode_data(m),
                     folder=base_folder,
                     file_name=CycleTimeDataClean.clean_data_file_name(telescope=telescope, command=n))
-        for p, q in full_nights_id.items():
+        async for p, q in AsyncDictItemsIter(full_nights_id):
             dat = OrderedDict({
                 'random_id': p,
                 'utc_time_stamp': q['utc_time_stamp'],
@@ -102,7 +105,7 @@ class CycleTimeDataClean(AbstractCycleTime):
                 file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope))
 
     @staticmethod
-    def _build_command_data(
+    async def _build_command_data(
             data: List[Dict[str, Any]], telescope: str, night_id: str,
             line_start: int, rm_modes: Dict[str, List[float]] = None) -> Dict[str, Any]:
 
@@ -167,26 +170,31 @@ class CycleTimeDataClean(AbstractCycleTime):
         return dat
 
     @staticmethod
-    def data_clean(telescope: str, base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
+    async def data_clean(telescope: str, base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
         """
         Method reading and cleaning only data from full nights (i.e. complete program) and only new data
         """
-        str_dat = CycleTimeDataClean.read_file(base_folder,
-                                            CycleTimeDataClean.raw_file_name(telescope=telescope))
+        str_dat = CycleTimeDataClean.read_file(
+            folder=base_folder,
+            file_name=CycleTimeDataClean.raw_file_name(telescope=telescope)
+        )
         parsed_data = CycleTimeDataClean._parse_data(str_dat)
-        full_nights_id = CycleTimeDataClean._find_nights_id(parsed_data)
-        full_nights_id = CycleTimeDataClean._verify_nights(full_nights_id=full_nights_id,
-                                                          telescope=telescope, base_folder=base_folder)
-        commands_data = CycleTimeDataClean._build_commands_data(
+        full_nights_id = await CycleTimeDataClean._find_nights_id(parsed_data)
+        full_nights_id = await CycleTimeDataClean._verify_nights(
+            full_nights_id=full_nights_id, telescope=telescope, base_folder=base_folder
+        )
+        commands_data = await CycleTimeDataClean._build_commands_data(
             data=parsed_data, telescope=telescope, full_nights_id=full_nights_id, rm_modes=rm_modes
         )
-        CycleTimeDataClean._save_commands_data_to_files(commands_data=commands_data,
-                                                       full_nights_id=full_nights_id,
-                                                       telescope=telescope,
-                                                       base_folder=base_folder)
+        await CycleTimeDataClean._save_commands_data_to_files(
+            commands_data=commands_data,
+            full_nights_id=full_nights_id,
+            telescope=telescope,
+            base_folder=base_folder
+        )
 
     @staticmethod
-    def data_clean_all(base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
+    async def data_clean_all(base_folder: str, rm_modes: Dict[str, List[float]] = None) -> None:
         """
         Method clean data for all telescopes and all commands.
         :param base_folder: Path to data folder.
@@ -200,6 +208,6 @@ class CycleTimeDataClean(AbstractCycleTime):
         """
         logger.debug(f'Data clean for all telescopes and all commands type')
         tel = CycleTimeDataClean.get_list_telesc(file_type='raw_data', base_folder=base_folder)
-        for t in tel:
+        async for t in AsyncListIter(tel):
             logger.info(f'Data clean for telescope: {t}')
-            CycleTimeDataClean.data_clean(telescope=t, base_folder=base_folder, rm_modes=rm_modes)
+            await CycleTimeDataClean.data_clean(telescope=t, base_folder=base_folder, rm_modes=rm_modes)
