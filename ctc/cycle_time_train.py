@@ -100,13 +100,19 @@ class CycleTimeTrain(AbstractCycleTime):
         logger.debug(f'Save train parameters for telescope:{telescope} command:{command}')
 
     @staticmethod
-    async def _train(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
-        # TODO maybe move to asyncio executor
+    def _regression(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
         model = LinearRegression()
         x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, random_state=123, test_size=0.3)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
         return {'r2': r2_score(y_test, y_pred), 'coef': model.coef_[0], 'intercept': model.intercept_[0]}
+
+    @staticmethod
+    async def _train(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
+        return await CycleTimeTrain.run_in_executor(
+            data_x, data_y,
+            func=CycleTimeTrain._regression
+        )
 
     @staticmethod
     async def train_all_telesc_all_commands(base_folder: str, skip_if_was_today: bool = True) -> None:
