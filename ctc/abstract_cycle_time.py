@@ -1,13 +1,15 @@
+import asyncio
 import logging
 import re
 from abc import ABC
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Callable
 import datetime
 import math
 import numpy as np
 import json
 import aiofile
+from concurrent.futures import ThreadPoolExecutor
 
 from ctc.iter_async import AsyncListIter
 
@@ -426,3 +428,12 @@ class AbstractCycleTime(ABC):
             return True
         else:
             return False
+
+    @staticmethod
+    async def run_in_executor(*args, func: Callable):
+        loop = asyncio.get_running_loop()
+        with ThreadPoolExecutor() as pool:
+            result = await loop.run_in_executor(
+                pool, func, *args
+            )
+        return result
