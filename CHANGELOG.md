@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.0.16 - 2024-11-27
+### Changed
+- Now DARK and ZERO use OBJECT params
+
 ## 1.0.15 - 2024-10-10
 ### Changed
 - Changing for asyncio (all ok, only calculator still sync)

@@ -43,6 +43,8 @@ class CycleTimeCalc(AbstractCycleTime):
          c.finnish_time_utc() --> you get utc date_time when program will finish
     """
 
+    USE_OBJECT_PARAMS_IN = ['DARK', 'ZERO']
+
     def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
         self._rmode: int = 0
@@ -305,13 +307,14 @@ class CycleTimeCalc(AbstractCycleTime):
                 elif 'wait_sunrise' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
                     try:
-                        sun = calculate_sun_rise_set(date=now,
-                                                     horiz_height=float(command_dict['kwargs']['wait_sunrise']),
-                                                     sunrise=True,
-                                                     latitude=self._observatory_location['latitude'],
-                                                     longitude=self._observatory_location['longitude'],
-                                                     elevation=self._observatory_location['elevation']
-                                                     )
+                        sun = calculate_sun_rise_set(
+                            date=now,
+                            horiz_height=float(command_dict['kwargs']['wait_sunrise']),
+                            sunrise=True,
+                            latitude=self._observatory_location['latitude'],
+                            longitude=self._observatory_location['longitude'],
+                            elevation=self._observatory_location['elevation']
+                        )
                     except AttributeError:
                         return 0
                     t = (sun - now).seconds
@@ -324,13 +327,14 @@ class CycleTimeCalc(AbstractCycleTime):
                 elif 'wait_sunset' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
                     try:
-                        sun = calculate_sun_rise_set(date=now,
-                                                     horiz_height=float(command_dict['kwargs']['wait_sunset']),
-                                                     sunrise=False,
-                                                     latitude=self._observatory_location['latitude'],
-                                                     longitude=self._observatory_location['longitude'],
-                                                     elevation=self._observatory_location['elevation']
-                                                     )
+                        sun = calculate_sun_rise_set(
+                            date=now,
+                            horiz_height=float(command_dict['kwargs']['wait_sunset']),
+                            sunrise=False,
+                            latitude=self._observatory_location['latitude'],
+                            longitude=self._observatory_location['longitude'],
+                            elevation=self._observatory_location['elevation']
+                        )
                     except AttributeError:
                         return 0
                     t = (sun - now).seconds
@@ -429,6 +433,8 @@ class CycleTimeCalc(AbstractCycleTime):
 
     def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> float or None:
         no_error = True
+        if command_name in self.USE_OBJECT_PARAMS_IN:
+            command_name = 'OBJECT'
         param = self.available_param[self.telescope][command_name]
         for n, m in command_dict_param.items():
             if n not in param['coef'].keys():
