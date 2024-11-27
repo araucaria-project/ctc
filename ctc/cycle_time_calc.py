@@ -43,7 +43,7 @@ class CycleTimeCalc(AbstractCycleTime):
          c.finnish_time_utc() --> you get utc date_time when program will finish
     """
 
-    USE_OBJECT_PARAMS_IN = ['DARK', 'ZERO']
+    USE_OBJECT_PARAMS_IN = ['DARK', 'ZERO', 'SNAP']
 
     def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
