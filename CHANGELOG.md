@@ -6,9 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
-## 1.0.16 - 2024-11-27
+## 1.0.17 - 2024-11-27
 ### Changed
-- Now DARK and ZERO use OBJECT params
+- Now DARK, SNAP and ZERO use OBJECT params
 
 ## 1.0.15 - 2024-10-10
 ### Changed
