@@ -8,7 +8,7 @@ All notable changes to this project will be documented in this file.
 
 ## 1.0.19 - 2025-01-06
 ### Changed
-- Now DARK, SNAP and ZERO use OBJECT params
+- Wait sunrise sunset sec changed.
 
 ## 1.0.18 - 2024-11-27
 ### Changed
