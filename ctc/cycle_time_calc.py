@@ -283,8 +283,8 @@ class CycleTimeCalc(AbstractCycleTime):
         if command_dict['command_name'] == 'WAIT':
             if 'kwargs' in command_dict.keys():
 
-                if 'wait' in command_dict['kwargs'].keys():
-                    t = float(command_dict['kwargs']['wait'])
+                if 'sec' in command_dict['kwargs'].keys():
+                    t = float(command_dict['kwargs']['sec'])
                     self._time_length += t
                     return t
 
@@ -308,12 +308,12 @@ class CycleTimeCalc(AbstractCycleTime):
                         self._time_length += t
                         return t
 
-                elif 'wait_sunrise' in command_dict['kwargs'].keys():
+                elif 'sunrise' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
                     try:
                         sun = calculate_sun_rise_set(
                             date=now,
-                            horiz_height=float(command_dict['kwargs']['wait_sunrise']),
+                            horiz_height=float(command_dict['kwargs']['sunrise']),
                             sunrise=True,
                             latitude=self._observatory_location['latitude'],
                             longitude=self._observatory_location['longitude'],
@@ -328,12 +328,12 @@ class CycleTimeCalc(AbstractCycleTime):
                         self._time_length += t
                     return t
 
-                elif 'wait_sunset' in command_dict['kwargs'].keys():
+                elif 'sunset' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
                     try:
                         sun = calculate_sun_rise_set(
                             date=now,
-                            horiz_height=float(command_dict['kwargs']['wait_sunset']),
+                            horiz_height=float(command_dict['kwargs']['sunset']),
                             sunrise=False,
                             latitude=self._observatory_location['latitude'],
                             longitude=self._observatory_location['longitude'],
