@@ -232,6 +232,14 @@ class CycleTimeCalc(AbstractCycleTime):
                 altaz = {'az': az, 'alt': alt}
         return altaz
 
+    def forced_readout_mode(self, command_dict: Dict[str, Any]) -> None:
+        if 'kwargs' in record.keys():
+            if 'read_mod' in record['kwargs'] and isinstance(record['kwargs']['read_mod'], int):
+                if record['kwargs']['read_mod'] in self._set_rm_modes[self.telescope]:
+                    self._rmode = record['kwargs']['read_mod']
+                else:
+                    logger.error(f'No red mod {record['kwargs']['read_mod']} in {self._set_rm_modes[self.telescope]}')
+
     def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> float or None:
         azalt = self._mount_altaz_target(command_dict=command_dict)
         if azalt is not None and not self.tpg:
@@ -265,6 +273,7 @@ class CycleTimeCalc(AbstractCycleTime):
         command_dict_param['mount_distance'] = mount_alt_az_dist
         command_dict_param['exposure_time_sum'] = CycleTimeCalc._exposure_time_sum(command_dict)
         command_dict_param['filter_changes'] = CycleTimeCalc._filter_changes(record=command_dict)
+        self.forced_readout_mode(command_dict=command_dict)
         command_dict_param['rmmode_expno'] = self._rm_mode_inv_mhz * exp_no
         command_dict_param['dither_expno'] = dither * exp_no
         self._current_filter = CycleTimeCalc._last_filter(command_dict)
