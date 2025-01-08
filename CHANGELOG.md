@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 
-## 1.1.3 - 2025-01-08
+## 1.1.4 - 2025-01-08
 ### Added
 - Now commands can change readout mode.
 

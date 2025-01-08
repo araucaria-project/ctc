@@ -239,7 +239,7 @@ class CycleTimeCalc(AbstractCycleTime):
                     new_rm = int(command_dict['kwargs']['read_mod'])
                 except (LookupError, TypeError, ValueError):
                     return
-                if new_rm in self._set_rm_modes[self.telescope]:
+                if new_rm < len(self._set_rm_modes[self.telescope]):
                     self._rmode = new_rm
                 else:
                     logger.error(
