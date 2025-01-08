@@ -236,7 +236,7 @@ class CycleTimeCalc(AbstractCycleTime):
         if 'kwargs' in command_dict.keys():
             if 'read_mod' in command_dict['kwargs']:
                 try:
-                    new_rm = command_dict['kwargs']['read_mod']
+                    new_rm = int(command_dict['kwargs']['read_mod'])
                 except (LookupError, TypeError, ValueError):
                     return
                 if new_rm in self._set_rm_modes[self.telescope]:
