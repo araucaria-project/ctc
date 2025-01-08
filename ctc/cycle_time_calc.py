@@ -234,12 +234,16 @@ class CycleTimeCalc(AbstractCycleTime):
 
     def forced_readout_mode(self, command_dict: Dict[str, Any]) -> None:
         if 'kwargs' in command_dict.keys():
-            if 'read_mod' in command_dict['kwargs'] and isinstance(command_dict['kwargs']['read_mod'], int):
-                if command_dict['kwargs']['read_mod'] in self._set_rm_modes[self.telescope]:
-                    self._rmode = command_dict['kwargs']['read_mod']
+            if 'read_mod' in command_dict['kwargs']:
+                try:
+                    new_rm = command_dict['kwargs']['read_mod']
+                except (LookupError, TypeError, ValueError):
+                    return
+                if new_rm in self._set_rm_modes[self.telescope]:
+                    self._rmode = new_rm
                 else:
                     logger.error(
-                        f"No red mod {command_dict['kwargs']['read_mod']} in {self._set_rm_modes[self.telescope]}"
+                        f"No red mod {new_rm} in {self._set_rm_modes[self.telescope]}"
                     )
 
     def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> float or None:
