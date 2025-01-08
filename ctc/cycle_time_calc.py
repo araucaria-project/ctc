@@ -235,7 +235,10 @@ class CycleTimeCalc(AbstractCycleTime):
     def forced_readout_mode(self, command_dict: Dict[str, Any]) -> None:
         if 'kwargs' in record.keys():
             if 'read_mod' in record['kwargs'] and isinstance(record['kwargs']['read_mod'], int):
-                self._rmode = record['kwargs']['read_mod']
+                if record['kwargs']['read_mod'] in self._set_rm_modes[self.telescope]:
+                    self._rmode = record['kwargs']['read_mod']
+                else:
+                    logger.error(f'No red mod {record['kwargs']['read_mod']} in {self._set_rm_modes[self.telescope]}')
 
     def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> float or None:
         azalt = self._mount_altaz_target(command_dict=command_dict)
