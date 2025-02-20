@@ -114,7 +114,10 @@ class AbstractCycleTime(ABC):
         s = data.split('\n')
         async for n in AsyncListIter(s):
             if len(n) > 1:
-                ret.append(AbstractCycleTime._decode_data(n))
+                try:
+                    ret.append(AbstractCycleTime._decode_data(n))
+                except json.JSONDecodeError:
+                    logger.warning(f'Can not decode {n}')
         return ret
 
     @staticmethod
