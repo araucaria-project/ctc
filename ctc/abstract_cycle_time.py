@@ -3,7 +3,7 @@ import logging
 import re
 from abc import ABC
 import os
-from typing import Dict, Any, List, Callable
+from typing import Dict, Any, List, Callable, Optional
 import datetime
 import math
 import numpy as np
@@ -72,11 +72,11 @@ class AbstractCycleTime(ABC):
         return com_lst
 
     @staticmethod
-    def _encode_data(data: Dict or List) -> str:
+    def _encode_data(data: Dict | List) -> str:
         return json.dumps(data)
 
     @staticmethod
-    def _decode_data(data: str) -> Dict or List:
+    def _decode_data(data: str) -> Dict | List:
         return json.loads(data)
 
     @staticmethod
@@ -152,7 +152,7 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
-    def read_file(folder: str, file_name: str) -> str or None:
+    def read_file(folder: str, file_name: str) -> Optional[str]:
         try:
             f = open(os.path.join(folder, file_name), "r", encoding='utf-8')
             dat = f.read()
@@ -164,7 +164,7 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
-    async def a_read_file(folder: str, file_name: str) -> str or None:
+    async def a_read_file(folder: str, file_name: str) -> Optional[str]:
         path = os.path.join(folder, file_name)
         try:
             async with aiofile.async_open(file_specifier=path, mode="r", encoding='utf-8') as afp:
@@ -176,8 +176,8 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
-    def _time_stamp() -> datetime:
-        return datetime.datetime.utcnow()
+    def _time_stamp() -> datetime.datetime:
+        return datetime.datetime.now(datetime.timezone.utc)
 
     @staticmethod
     def _rm_mode(record: Dict[str, Any]) -> int:
@@ -187,7 +187,8 @@ class AbstractCycleTime(ABC):
             return 1
 
     @staticmethod
-    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[str, List[float]] = None) -> float or int or None:
+    def _rm_mode_inverse_mhz(
+            rm_mode: int, telescope: str, rm_modes: Optional[Dict[str, List[float]]] = None) -> float | int | None:
         if not rm_modes:
             rm_modes = AbstractCycleTime._DEFAULT_RM_MODES_MHZ
         if rm_modes is not None:
@@ -242,7 +243,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def _vector(alt: float, az: float) -> np.array:
+    def _vector(alt: float, az: float) -> np.ndarray:
         """
         Method builds vector from alt az
         :param alt: alt degrees
