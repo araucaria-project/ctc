@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List, Union, Optional
 import logging
 from ctc.abstract_cycle_time import AbstractCycleTime
 import datetime
@@ -43,7 +43,7 @@ class CycleTimeCalc(AbstractCycleTime):
          c.finnish_time_utc() --> you get utc date_time when program will finish
     """
 
-    USE_OBJECT_PARAMS_IN = ['DARK', 'ZERO', 'SNAP']
+    USE_OBJECT_PARAMS_IN = ['ZERO', 'DARK', 'SNAP']
 
     def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
@@ -65,9 +65,12 @@ class CycleTimeCalc(AbstractCycleTime):
         self._time_length_list: List[float] = []
         self._mk_dirs(self.base_folder)
         self._get_params()
-        self._set_rm_modes: Dict[str, List[float]] or None = None
+        self._set_rm_modes: Optional[Dict[str, List[float]]] = None
         self.tpg = tpg
         super().__init__()
+
+    def set_current_filter(self, filter_: str) -> None:
+        self._current_filter = filter_
 
     def set_observatory_location(self, location: Dict[str, Any]) -> None:
         """
@@ -100,7 +103,7 @@ class CycleTimeCalc(AbstractCycleTime):
         self._skipping = skipping
 
     @property
-    def _avialable_param_telesc(self) -> Dict[str, Any] or None:
+    def _avialable_param_telesc(self) -> Optional[Dict[str, Any]]:
         if self.telescope in self.available_param.keys():
             return self.available_param[self.telescope]
         else:
@@ -195,7 +198,7 @@ class CycleTimeCalc(AbstractCycleTime):
         """
         self._az_dome = az
 
-    def _mount_altaz_target(self, command_dict: Dict[str, Any]) -> Dict[str, float] or None:
+    def _mount_altaz_target(self, command_dict: Dict[str, Any]) -> Optional[Dict[str, float]]:
         """
         Method calculate alt az from command dictionary
         :param command_dict: command dict
@@ -246,7 +249,7 @@ class CycleTimeCalc(AbstractCycleTime):
                         f"No red mod {new_rm} in {self._set_rm_modes[self.telescope]}"
                     )
 
-    def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> float or None:
+    def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> Optional[float]:
         azalt = self._mount_altaz_target(command_dict=command_dict)
         if azalt is not None and not self.tpg:
             if (azalt['alt'] >= self._alt_limit) or (azalt['alt'] < self._alt_limit and self._skipping is False):
@@ -294,7 +297,7 @@ class CycleTimeCalc(AbstractCycleTime):
         self._time_length += comm_time
         return comm_time
 
-    def _calc_time_wait_command(self, command_dict: Dict[str, Any]) -> float or None:
+    def _calc_time_wait_command(self, command_dict: Dict[str, Any]) -> Optional[float]:
         if command_dict['command_name'] == 'WAIT':
             if 'kwargs' in command_dict.keys():
 
@@ -387,7 +390,7 @@ class CycleTimeCalc(AbstractCycleTime):
         mydate = f"{day} {time_str}"
         return time.mktime(datetime.datetime.strptime(mydate, "%Y-%m-%d %H:%M:%S").timetuple())
 
-    def calc_time(self, command_dict: Union[Dict[str, Any], str]) -> float or None:
+    def calc_time(self, command_dict: Union[Dict[str, Any], str]) -> Optional[float]:
         """
         Method calculate time for one command.
         :param command_dict: command_dict parsed by pyaraucaria obs_plan_parser or command string.
@@ -450,7 +453,7 @@ class CycleTimeCalc(AbstractCycleTime):
         """
         return self._time_length_list
 
-    def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> float or None:
+    def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> Optional[float]:
         no_error = True
         if command_name in self.USE_OBJECT_PARAMS_IN:
             command_name = 'OBJECT'

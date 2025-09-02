@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.1.6 - 2025-09-02
+### Changed
+- Typing fix, add some logging
+
 ## 1.1.5 - 2025-02-20
 ### Added
 - Add error serve to json
