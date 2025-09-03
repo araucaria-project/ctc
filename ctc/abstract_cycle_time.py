@@ -157,7 +157,7 @@ class AbstractCycleTime(ABC):
             f = open(os.path.join(folder, file_name), "r", encoding='utf-8')
             dat = f.read()
             f.close()
-            logger.debug(f'File read')
+            logger.debug(f'File read {os.path.join(folder, file_name)}')
             return dat
         except (FileExistsError, FileNotFoundError):
             logger.error(f'File {file_name} can not be reached')
@@ -404,7 +404,7 @@ class AbstractCycleTime(ABC):
             else:
                 return 0
         else:
-            return 1
+            return 0
 
     @staticmethod
     async def last_clean_train_fn() -> str:

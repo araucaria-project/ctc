@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.1.8 - 2025-09-03
+### Fixed
+- `cycle_time_calc` dither was on where shouldn't be
+- `cycle_time_calc` add possible commands _available_param_telesc_commands from self.USE_OBJECT_PARAMS_IN
+
 ## 1.1.6 - 2025-09-02
 ### Changed
 - Typing fix, add some logging
