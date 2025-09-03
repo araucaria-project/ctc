@@ -475,8 +475,9 @@ class CycleTimeCalc(AbstractCycleTime):
             for n, m in command_dict_param.items():
                 logger.debug(f"{n} {m} {param['coef'][n]}")
                 ret += (m * param['coef'][n])
-            logger.debug(f"Intercept {param['intercept']}")
-            ret += param['intercept']
+            if command_name not in self.USE_OBJECT_PARAMS_IN:
+                logger.debug(f"Intercept {param['intercept']}")
+                ret += param['intercept']
             return ret
         else:
             return None

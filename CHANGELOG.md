@@ -6,10 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
-## 1.1.8 - 2025-09-03
+## 1.1.9 - 2025-09-03
 ### Fixed
 - `cycle_time_calc` dither was on where shouldn't be
-- `cycle_time_calc` add possible commands _available_param_telesc_commands from self.USE_OBJECT_PARAMS_IN
+- `cycle_time_calc` add possible commands _available_param_telesc_commands from USE_OBJECT_PARAMS_IN
+- `cycle_time_calc` for commands are in USE_OBJECT_PARAMS_IN intercept is not added
 
 ## 1.1.6 - 2025-09-02
 ### Changed
