@@ -103,7 +103,7 @@ class CycleTimeCalc(AbstractCycleTime):
         self._skipping = skipping
 
     @property
-    def _avialable_param_telesc(self) -> Optional[Dict[str, Any]]:
+    def _available_param_telesc(self) -> Optional[Dict[str, Any]]:
         if self.telescope in self.available_param.keys():
             return self.available_param[self.telescope]
         else:
@@ -112,9 +112,9 @@ class CycleTimeCalc(AbstractCycleTime):
     @property
     def _available_param_telesc_commands(self) -> List[str]:
         li = []
-        if self._avialable_param_telesc:
+        if self._available_param_telesc:
             # Add commands from param
-            for ke, val in self._avialable_param_telesc.items():
+            for ke, val in self._available_param_telesc.items():
                 li.append(ke)
             # Add commands from USE_OBJECT_PARAMS_IN
             if 'OBJECT' in li:
