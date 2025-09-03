@@ -44,6 +44,7 @@ class CycleTimeCalc(AbstractCycleTime):
     """
 
     USE_OBJECT_PARAMS_IN = ['ZERO', 'DARK', 'SNAP']
+    MIN_EXP_NO_TO_ADD_INTERCEPT = 10
 
     def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
@@ -295,7 +296,9 @@ class CycleTimeCalc(AbstractCycleTime):
         command_dict_param['rmmode_expno'] = self._rm_mode_inv_mhz * exp_no
         command_dict_param['dither_expno'] = dither * exp_no
         self._current_filter = CycleTimeCalc._last_filter(command_dict)
-        time_cal = self._calc_time(command_name=command_dict['command_name'], command_dict_param=command_dict_param)
+        time_cal = self._calc_time(
+            command_name=command_dict['command_name'], command_dict_param=command_dict_param, exp_no=exp_no
+        )
         if time_cal:
             if time_cal >= 0:
                 comm_time = time_cal
@@ -461,7 +464,7 @@ class CycleTimeCalc(AbstractCycleTime):
         """
         return self._time_length_list
 
-    def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> Optional[float]:
+    def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any], exp_no: int) -> Optional[float]:
         no_error = True
         if command_name in self.USE_OBJECT_PARAMS_IN:
             param = self.available_param[self.telescope]['OBJECT']
@@ -475,7 +478,7 @@ class CycleTimeCalc(AbstractCycleTime):
             for n, m in command_dict_param.items():
                 logger.debug(f"{n} {m} {param['coef'][n]}")
                 ret += (m * param['coef'][n])
-            if command_name not in self.USE_OBJECT_PARAMS_IN:
+            if command_name not in self.USE_OBJECT_PARAMS_IN and exp_no >= self.MIN_EXP_NO_TO_ADD_INTERCEPT:
                 logger.debug(f"Intercept {param['intercept']}")
                 ret += param['intercept']
             return ret
