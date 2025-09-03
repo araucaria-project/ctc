@@ -103,21 +103,29 @@ class CycleTimeCalc(AbstractCycleTime):
         self._skipping = skipping
 
     @property
-    def _avialable_param_telesc(self) -> Optional[Dict[str, Any]]:
+    def _available_param_telesc(self) -> Optional[Dict[str, Any]]:
         if self.telescope in self.available_param.keys():
             return self.available_param[self.telescope]
         else:
             return None
 
     @property
-    def _avialable_param_telesc_commands(self) -> List[str]:
+    def _available_param_telesc_commands(self) -> List[str]:
         li = []
-        if self._avialable_param_telesc:
-            for ke, val in self._avialable_param_telesc.items():
+        if self._available_param_telesc:
+            # Add commands from param
+            for ke, val in self._available_param_telesc.items():
                 li.append(ke)
+            # Add commands from USE_OBJECT_PARAMS_IN
+            if 'OBJECT' in li:
+                for a in self.USE_OBJECT_PARAMS_IN:
+                    if a not in li:
+                        li.append(a)
+        # Remove no train commands
         for n in CycleTimeCalc._NO_TRAIN_COMMANDS:
             if n in li:
                 li.remove(n)
+        logger.debug(li)
         return li
 
     def _get_params(self) -> None:
@@ -275,6 +283,7 @@ class CycleTimeCalc(AbstractCycleTime):
             mount_alt_az_dist = 0.0
             dome_az_dist = 0.0
         command_dict_param = {}
+
         exp_no = CycleTimeCalc._exposure_number(command_dict)
         dither = CycleTimeCalc._dither_on(command_dict=command_dict)
         command_dict['filter_pos'] = self._current_filter
@@ -410,7 +419,7 @@ class CycleTimeCalc(AbstractCycleTime):
             raise TypeError
 
         try:
-            if command_dict['command_name'] in self._avialable_param_telesc_commands:
+            if command_dict['command_name'] in self._available_param_telesc_commands:
                 tim = self._calc_time_no_wait_commands(command_dict=command_dict)
             elif command_dict['command_name'] in CycleTimeCalc._NO_TRAIN_COMMANDS:
                 tim = self._calc_time_wait_command(command_dict=command_dict)
@@ -464,7 +473,9 @@ class CycleTimeCalc(AbstractCycleTime):
         if no_error:
             ret = 0
             for n, m in command_dict_param.items():
+                logger.debug(f"{n} {m} {param['coef'][n]}")
                 ret += (m * param['coef'][n])
+            logger.debug(f"Intercept {param['intercept']}")
             ret += param['intercept']
             return ret
         else:
