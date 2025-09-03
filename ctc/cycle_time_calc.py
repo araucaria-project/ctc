@@ -417,7 +417,6 @@ class CycleTimeCalc(AbstractCycleTime):
         else:
             logger.error(f'command_dict TypeError')
             raise TypeError
-
         try:
             if command_dict['command_name'] in self._available_param_telesc_commands:
                 tim = self._calc_time_no_wait_commands(command_dict=command_dict)
@@ -465,8 +464,9 @@ class CycleTimeCalc(AbstractCycleTime):
     def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> Optional[float]:
         no_error = True
         if command_name in self.USE_OBJECT_PARAMS_IN:
-            command_name = 'OBJECT'
-        param = self.available_param[self.telescope][command_name]
+            param = self.available_param[self.telescope]['OBJECT']
+        else:
+            param = self.available_param[self.telescope][command_name]
         for n, m in command_dict_param.items():
             if n not in param['coef'].keys():
                 no_error = False
