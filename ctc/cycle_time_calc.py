@@ -44,7 +44,7 @@ class CycleTimeCalc(AbstractCycleTime):
     """
 
     USE_OBJECT_PARAMS_IN = ['ZERO', 'DARK', 'SNAP']
-    MIN_EXP_NO_TO_ADD_INTERCEPT = 10
+    MIN_EXP_NO_TO_ADD_INTERCEPT = 2
 
     def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
