@@ -77,7 +77,9 @@ class CycleTimeDataClean(AbstractCycleTime):
             async for n in AsyncListIter(l):
                 if len(n) > 1:
                     d = CycleTimeDataClean._decode_data(n)
-                    if d['random_id'] in full_nights_id.keys():
+                    if not d:
+                        continue
+                    if 'random_id' in d.keys() and d['random_id'] in full_nights_id.keys():
                         if d['utc_time_stamp'] == full_nights_id[d['random_id']]['utc_time_stamp']:
                             full_nights_id.pop(d['random_id'])
         else:
