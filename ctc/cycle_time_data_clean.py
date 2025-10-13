@@ -1,5 +1,5 @@
 import time
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from ctc.abstract_cycle_time import AbstractCycleTime
 import logging
 from collections import OrderedDict
@@ -15,10 +15,12 @@ class CycleTimeDataClean(AbstractCycleTime):
     """
 
     @staticmethod
-    async def _find_nights_id(data: List[Any]) -> Dict[str, Dict[str, Any]]:
+    async def _find_nights_id(data: List[Any]) -> Optional[Dict[str, Dict[str, Any]]]:
         random_id = ''
         full_nights_id = {}
         line_started = None
+        if not data:
+            return None
         async for n, m in AsyncEnumerateIter(data):
             if m['command_name'] == 'NIGHTPLAN' and 'done' not in m.keys() and \
                     'skipped' not in m.keys() and random_id != m['random_id']:
