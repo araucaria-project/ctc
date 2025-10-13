@@ -3,7 +3,7 @@ import logging
 import re
 from abc import ABC
 import os
-from typing import Dict, Any, List, Callable, Optional
+from typing import Dict, Any, List, Callable, Optional, Union
 import datetime
 import math
 import numpy as np
@@ -72,12 +72,20 @@ class AbstractCycleTime(ABC):
         return com_lst
 
     @staticmethod
-    def _encode_data(data: Dict | List) -> str:
-        return json.dumps(data)
+    def _encode_data(data: Dict | List) -> Optional[str]:
+        try:
+            return json.dumps(data)
+        except (ValueError, json.JSONDecodeError, TypeError):
+            logger.warning("Can not encode json data")
+            return None
 
     @staticmethod
-    def _decode_data(data: str) -> Dict | List:
-        return json.loads(data)
+    def _decode_data(data: str) -> Optional[Union[Dict, List]]:
+        try:
+            return json.loads(data)
+        except (ValueError, json.JSONDecodeError, TypeError):
+            logger.warning("Can not decode json data")
+            return None
 
     @staticmethod
     def raw_file_name(telescope: str) -> str:
