@@ -129,13 +129,15 @@ class CycleTimeDataClean(AbstractCycleTime):
             line_start: int, rm_modes: Dict[str, List[float]] = None) -> Optional[Dict[str, Any]]:
 
         try:
-            first = data[line_start]
-            second = data[line_start + 1]
-            third = data[line_start + 2]
+            first = data[line_start] # Here operation starts
+            second = data[line_start + 1]  # Here operation ends
+            third = data[line_start + 2]  # Here where another operation starts (not NIGHTPLAN)
         except (LookupError, ValueError, TypeError):
             return None
 
         if third['command_name'] == 'NIGHTPLAN' and 'done' not in third.keys() and 'skipped' not in third.keys():
+            dat = None
+        elif 'done' in first.keys() and bool(first['done']) == True:
             dat = None
         else:
             if 'dome_az_end' in third.keys():
