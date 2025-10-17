@@ -3,7 +3,7 @@ import logging
 import re
 from abc import ABC
 import os
-from typing import Dict, Any, List, Callable
+from typing import Dict, Any, List, Callable, Union, Optional
 import datetime
 import math
 import numpy as np
@@ -72,12 +72,23 @@ class AbstractCycleTime(ABC):
         return com_lst
 
     @staticmethod
-    def _encode_data(data: Dict or List) -> str:
-        return json.dumps(data)
+    def _encode_data(data: Union[Dict, List]) -> Optional[str]:
+        try:
+            return json.dumps(data)
+        except TypeError:
+            logger.error(f"Can not encode json data")
+            return None
 
     @staticmethod
-    def _decode_data(data: str) -> Dict or List:
-        return json.loads(data)
+    def _decode_data(data: str) -> Optional[Union[Dict, List]]:
+        try:
+            return json.loads(data)
+        except TypeError as e:
+            logger.error(f"Can not decode json data, TypeError: {e}")
+            return None
+        except json.JSONDecodeError as e:
+            logger.error(f"Can not decode json data, JSONDecodeError: {e}")
+            return None
 
     @staticmethod
     def raw_file_name(telescope: str) -> str:
@@ -114,7 +125,9 @@ class AbstractCycleTime(ABC):
         s = data.split('\n')
         async for n in AsyncListIter(s):
             if len(n) > 1:
-                ret.append(AbstractCycleTime._decode_data(n))
+                decoded_data = AbstractCycleTime._decode_data(n)
+                if decoded_data:
+                    ret.append(AbstractCycleTime._decode_data(n))
         return ret
 
     @staticmethod
