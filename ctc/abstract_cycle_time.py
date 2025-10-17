@@ -72,7 +72,7 @@ class AbstractCycleTime(ABC):
         return com_lst
 
     @staticmethod
-    def _encode_data(data: Dict | List) -> Optional[str]:
+    def _encode_data(data: Union[Dict, List]) -> Optional[str]:
         try:
             return json.dumps(data)
         except (ValueError, json.JSONDecodeError, TypeError):
@@ -122,10 +122,9 @@ class AbstractCycleTime(ABC):
         s = data.split('\n')
         async for n in AsyncListIter(s):
             if len(n) > 1:
-                try:
-                    ret.append(AbstractCycleTime._decode_data(n))
-                except json.JSONDecodeError:
-                    logger.warning(f'Can not decode {n}')
+                decoded_data = AbstractCycleTime._decode_data(n)
+                if decoded_data:
+                    ret.append(decoded_data)
         return ret
 
     @staticmethod
