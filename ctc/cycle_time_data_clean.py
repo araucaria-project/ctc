@@ -61,7 +61,7 @@ class CycleTimeDataClean(AbstractCycleTime):
         async for n_id, m_dict in AsyncDictItemsIter(full_nights_id):
             masked_data = []
             try:
-                async for rec_id in AsyncRangeIter(m_dict['started'] + 1, m_dict['ended']):
+                async for rec_id in AsyncRangeIter(m_dict['started'], m_dict['ended']):
                     masked_data.append(data[rec_id])
             except (ValueError, TypeError, LookupError):
                 continue
