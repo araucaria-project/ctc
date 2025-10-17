@@ -1,8 +1,8 @@
 import time
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from collections import OrderedDict
 import numpy as np
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge, Lasso
 from ctc.abstract_cycle_time import AbstractCycleTime
 from sklearn.metrics import r2_score
 from sklearn.model_selection import train_test_split
@@ -21,7 +21,7 @@ class CycleTimeTrain(AbstractCycleTime):
     _MIN_DATA_RECORDS_TO_TRAIN = 10
 
     @staticmethod
-    async def _build_array(data: List[Dict[str, Any]], xory: str) -> np.array or None:
+    async def _build_array(data: List[Dict[str, Any]], xory: str) -> Optional[np.ndarray]:
 
         if xory == 'x':
             w = CycleTimeTrain._X_COLUMNS
@@ -49,13 +49,12 @@ class CycleTimeTrain(AbstractCycleTime):
                 li_m.append(record['mount_distance'])
             except (LookupError, TypeError):
                 pass
-        dome_avr_dist = np.mean(np.array([li_d]))
-        mount_avr_dist = np.mean(np.array([li_m]))
+        dome_avr_dist = float(np.mean(np.array([li_d])))
+        mount_avr_dist = float(np.mean(np.array([li_m])))
         return dome_avr_dist, mount_avr_dist
 
     @staticmethod
     async def train_data_command(telescope: str, command: str, base_folder: str) -> None:
-        logger.debug(f'Train telelescope: {telescope} command: {command}')
         min_record_to_train = CycleTimeTrain._MIN_DATA_RECORDS_TO_TRAIN
         data = await CycleTimeTrain.a_read_file(
             base_folder, CycleTimeTrain.clean_data_file_name(telescope=telescope, command=command)
@@ -85,7 +84,7 @@ class CycleTimeTrain(AbstractCycleTime):
             'dome_average_dist': param['dome_average_dist'],
             'mount_average_dist': param['mount_average_dist']
         })
-
+        logger.info(f'Train telescope: {telescope} command: {command} -> {dat}')
         await CycleTimeTrain._a_add_to_file(
             data=CycleTimeTrain._encode_data(data=dat),
             folder=base_folder,
@@ -100,15 +99,19 @@ class CycleTimeTrain(AbstractCycleTime):
         logger.debug(f'Save train parameters for telescope:{telescope} command:{command}')
 
     @staticmethod
-    def _regression(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
+    def _regression(data_x: np.ndarray, data_y: np.ndarray) -> Dict[str, Any]:
         model = LinearRegression()
+        # model = Ridge(alpha=0.0000001)
+        # model = Lasso(alpha=0.000005)
         x_train, x_test, y_train, y_test = train_test_split(data_x, data_y, random_state=123, test_size=0.3)
         model.fit(x_train, y_train)
         y_pred = model.predict(x_test)
-        return {'r2': r2_score(y_test, y_pred), 'coef': model.coef_[0], 'intercept': model.intercept_[0]}
+        results = {'r2': r2_score(y_test, y_pred), 'coef': model.coef_[0], 'intercept': model.intercept_[0]}
+        logger.info(results)
+        return results
 
     @staticmethod
-    async def _train(data_x: np.array, data_y: np.array) -> Dict[str, Any]:
+    async def _train(data_x: np.ndarray, data_y: np.ndarray) -> Dict[str, Any]:
         return await CycleTimeTrain.run_in_executor(
             data_x, data_y,
             func=CycleTimeTrain._regression
@@ -120,12 +123,14 @@ class CycleTimeTrain(AbstractCycleTime):
         if skip_if_was_today and await CycleTimeTrain.if_last_clean_train_was_today(base_folder=base_folder):
             logger.info(f'Training was done today, skipping.')
             return
-        logger.info(f'Train all telescopes and all commands type')
-        async for t in AsyncListIter(CycleTimeTrain.get_list_telesc(file_type='clean_data', base_folder=base_folder)):
+        tele_list = CycleTimeTrain.get_list_telesc(file_type='clean_data', base_folder=base_folder)
+        logger.info(f'Train all telescopes and all commands type {tele_list}')
+
+        async for t in AsyncListIter(tele_list):
             logger.info(f'Data train for telescope: {t}')
             async for c in AsyncListIter(CycleTimeTrain.get_list_commands(
                     telescope=t, file_type='clean_data', base_folder=base_folder
             )):
                 await CycleTimeTrain.train_data_command(telescope=t, command=c, base_folder=base_folder)
         await CycleTimeTrain.save_last_clean_train_fle(base_folder=base_folder)
-        logger.info(f'Training done in {time.time() - t_0:.1f}')
+        logger.info(f'Training done in {time.time() - t_0:.1f}s')

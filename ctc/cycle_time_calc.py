@@ -43,7 +43,8 @@ class CycleTimeCalc(AbstractCycleTime):
          c.finnish_time_utc() --> you get utc date_time when program will finish
     """
 
-    USE_OBJECT_PARAMS_IN = ['DARK', 'ZERO', 'SNAP']
+    USE_OBJECT_PARAMS_IN = ['ZERO', 'DARK', 'SNAP']
+    MIN_EXP_NO_TO_ADD_INTERCEPT = 2
 
     def __init__(self, telescope: str, base_folder: str, tpg: bool = False) -> None:
         self.available_param: Dict[str, Dict[str, Any]] = {}
@@ -68,6 +69,9 @@ class CycleTimeCalc(AbstractCycleTime):
         self._set_rm_modes: Optional[Dict[str, List[float]]] = None
         self.tpg = tpg
         super().__init__()
+
+    def set_current_filter(self, filter_: str) -> None:
+        self._current_filter = filter_
 
     def set_observatory_location(self, location: Dict[str, Any]) -> None:
         """
@@ -100,21 +104,29 @@ class CycleTimeCalc(AbstractCycleTime):
         self._skipping = skipping
 
     @property
-    def _avialable_param_telesc(self) -> Optional[Dict[str, Any]]:
+    def _available_param_telesc(self) -> Optional[Dict[str, Any]]:
         if self.telescope in self.available_param.keys():
             return self.available_param[self.telescope]
         else:
             return None
 
     @property
-    def _avialable_param_telesc_commands(self) -> List[str]:
+    def _available_param_telesc_commands(self) -> List[str]:
         li = []
-        if self._avialable_param_telesc:
-            for ke, val in self._avialable_param_telesc.items():
+        if self._available_param_telesc:
+            # Add commands from param
+            for ke, val in self._available_param_telesc.items():
                 li.append(ke)
+            # Add commands from USE_OBJECT_PARAMS_IN
+            if 'OBJECT' in li:
+                for a in self.USE_OBJECT_PARAMS_IN:
+                    if a not in li:
+                        li.append(a)
+        # Remove no train commands
         for n in CycleTimeCalc._NO_TRAIN_COMMANDS:
             if n in li:
                 li.remove(n)
+        logger.debug(li)
         return li
 
     def _get_params(self) -> None:
@@ -123,8 +135,8 @@ class CycleTimeCalc(AbstractCycleTime):
             for co in CycleTimeCalc.get_list_commands(
                     telescope=t, file_type='train_param_last', base_folder=self.base_folder):
                 data = self.get_last_params(telescope=t, command=co)
-                self.available_param[t][co] = data
-
+                if data:
+                    self.available_param[t][co] = data
 
     def get_last_params(self, telescope: str, command: str) -> Dict[str, Any]:
         """
@@ -136,7 +148,11 @@ class CycleTimeCalc(AbstractCycleTime):
         data = CycleTimeCalc.read_file(
             self.base_folder, CycleTimeCalc.train_param_last_file_name(telescope=telescope, command=command)
         )
-        return CycleTimeCalc._parse_data(data=data)[-1]
+        try:
+            ret = CycleTimeCalc._parse_data(data=data)[-1]
+        except (LookupError, ValueError):
+            ret = None
+        return ret
 
     def set_start_rmode(self, rmode: int) -> None:
         """
@@ -228,6 +244,23 @@ class CycleTimeCalc(AbstractCycleTime):
                 altaz = {'az': az, 'alt': alt}
         return altaz
 
+<<<<<<< HEAD
+=======
+    def forced_readout_mode(self, command_dict: Dict[str, Any]) -> None:
+        if 'kwargs' in command_dict.keys():
+            if 'read_mod' in command_dict['kwargs']:
+                try:
+                    new_rm = int(command_dict['kwargs']['read_mod'])
+                except (LookupError, TypeError, ValueError):
+                    return
+                if new_rm < len(self._set_rm_modes[self.telescope]):
+                    self._rmode = new_rm
+                else:
+                    logger.error(
+                        f"No red mod {new_rm} in {self._set_rm_modes[self.telescope]}"
+                    )
+
+>>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
     def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> Optional[float]:
         azalt = self._mount_altaz_target(command_dict=command_dict)
         if azalt is not None and not self.tpg:
@@ -254,6 +287,7 @@ class CycleTimeCalc(AbstractCycleTime):
             mount_alt_az_dist = 0.0
             dome_az_dist = 0.0
         command_dict_param = {}
+
         exp_no = CycleTimeCalc._exposure_number(command_dict)
         dither = CycleTimeCalc._dither_on(command_dict=command_dict)
         command_dict['filter_pos'] = self._current_filter
@@ -261,10 +295,13 @@ class CycleTimeCalc(AbstractCycleTime):
         command_dict_param['mount_distance'] = mount_alt_az_dist
         command_dict_param['exposure_time_sum'] = CycleTimeCalc._exposure_time_sum(command_dict)
         command_dict_param['filter_changes'] = CycleTimeCalc._filter_changes(record=command_dict)
+        self.forced_readout_mode(command_dict=command_dict)
         command_dict_param['rmmode_expno'] = self._rm_mode_inv_mhz * exp_no
         command_dict_param['dither_expno'] = dither * exp_no
         self._current_filter = CycleTimeCalc._last_filter(command_dict)
-        time_cal = self._calc_time(command_name=command_dict['command_name'], command_dict_param=command_dict_param)
+        time_cal = self._calc_time(
+            command_name=command_dict['command_name'], command_dict_param=command_dict_param, exp_no=exp_no
+        )
         if time_cal:
             if time_cal >= 0:
                 comm_time = time_cal
@@ -279,8 +316,8 @@ class CycleTimeCalc(AbstractCycleTime):
         if command_dict['command_name'] == 'WAIT':
             if 'kwargs' in command_dict.keys():
 
-                if 'wait' in command_dict['kwargs'].keys():
-                    t = float(command_dict['kwargs']['wait'])
+                if 'sec' in command_dict['kwargs'].keys():
+                    t = float(command_dict['kwargs']['sec'])
                     self._time_length += t
                     return t
 
@@ -304,12 +341,12 @@ class CycleTimeCalc(AbstractCycleTime):
                         self._time_length += t
                         return t
 
-                elif 'wait_sunrise' in command_dict['kwargs'].keys():
+                elif 'sunrise' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
                     try:
                         sun = calculate_sun_rise_set(
                             date=now,
-                            horiz_height=float(command_dict['kwargs']['wait_sunrise']),
+                            horiz_height=float(command_dict['kwargs']['sunrise']),
                             sunrise=True,
                             latitude=self._observatory_location['latitude'],
                             longitude=self._observatory_location['longitude'],
@@ -324,12 +361,12 @@ class CycleTimeCalc(AbstractCycleTime):
                         self._time_length += t
                     return t
 
-                elif 'wait_sunset' in command_dict['kwargs'].keys():
+                elif 'sunset' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
                     try:
                         sun = calculate_sun_rise_set(
                             date=now,
-                            horiz_height=float(command_dict['kwargs']['wait_sunset']),
+                            horiz_height=float(command_dict['kwargs']['sunset']),
                             sunrise=False,
                             latitude=self._observatory_location['latitude'],
                             longitude=self._observatory_location['longitude'],
@@ -386,9 +423,8 @@ class CycleTimeCalc(AbstractCycleTime):
         else:
             logger.error(f'command_dict TypeError')
             raise TypeError
-
         try:
-            if command_dict['command_name'] in self._avialable_param_telesc_commands:
+            if command_dict['command_name'] in self._available_param_telesc_commands:
                 tim = self._calc_time_no_wait_commands(command_dict=command_dict)
             elif command_dict['command_name'] in CycleTimeCalc._NO_TRAIN_COMMANDS:
                 tim = self._calc_time_wait_command(command_dict=command_dict)
@@ -431,19 +467,27 @@ class CycleTimeCalc(AbstractCycleTime):
         """
         return self._time_length_list
 
+<<<<<<< HEAD
     def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> Optional[float]:
+=======
+    def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any], exp_no: int) -> Optional[float]:
+>>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
         no_error = True
         if command_name in self.USE_OBJECT_PARAMS_IN:
-            command_name = 'OBJECT'
-        param = self.available_param[self.telescope][command_name]
+            param = self.available_param[self.telescope]['OBJECT']
+        else:
+            param = self.available_param[self.telescope][command_name]
         for n, m in command_dict_param.items():
             if n not in param['coef'].keys():
                 no_error = False
         if no_error:
             ret = 0
             for n, m in command_dict_param.items():
+                logger.debug(f"{n} {m} {param['coef'][n]}")
                 ret += (m * param['coef'][n])
-            ret += param['intercept']
+            if command_name not in self.USE_OBJECT_PARAMS_IN and exp_no >= self.MIN_EXP_NO_TO_ADD_INTERCEPT:
+                logger.debug(f"Intercept {param['intercept']}")
+                ret += param['intercept']
             return ret
         else:
             return None

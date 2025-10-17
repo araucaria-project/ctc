@@ -3,7 +3,11 @@ import logging
 import re
 from abc import ABC
 import os
+<<<<<<< HEAD
 from typing import Dict, Any, List, Callable, Union, Optional
+=======
+from typing import Dict, Any, List, Callable, Optional, Union
+>>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
 import datetime
 import math
 import numpy as np
@@ -72,22 +76,35 @@ class AbstractCycleTime(ABC):
         return com_lst
 
     @staticmethod
+<<<<<<< HEAD
     def _encode_data(data: Union[Dict, List]) -> Optional[str]:
         try:
             return json.dumps(data)
         except TypeError:
             logger.error(f"Can not encode json data")
+=======
+    def _encode_data(data: Dict | List) -> Optional[str]:
+        try:
+            return json.dumps(data)
+        except (ValueError, json.JSONDecodeError, TypeError):
+            logger.warning("Can not encode json data")
+>>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
             return None
 
     @staticmethod
     def _decode_data(data: str) -> Optional[Union[Dict, List]]:
         try:
             return json.loads(data)
+<<<<<<< HEAD
         except TypeError as e:
             logger.error(f"Can not decode json data, TypeError: {e}")
             return None
         except json.JSONDecodeError as e:
             logger.error(f"Can not decode json data, JSONDecodeError: {e}")
+=======
+        except (ValueError, json.JSONDecodeError, TypeError):
+            logger.warning("Can not decode json data")
+>>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
             return None
 
     @staticmethod
@@ -125,9 +142,16 @@ class AbstractCycleTime(ABC):
         s = data.split('\n')
         async for n in AsyncListIter(s):
             if len(n) > 1:
+<<<<<<< HEAD
                 decoded_data = AbstractCycleTime._decode_data(n)
                 if decoded_data:
                     ret.append(AbstractCycleTime._decode_data(n))
+=======
+                try:
+                    ret.append(AbstractCycleTime._decode_data(n))
+                except json.JSONDecodeError:
+                    logger.warning(f'Can not decode {n}')
+>>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
         return ret
 
     @staticmethod
@@ -162,19 +186,19 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
-    def read_file(folder: str, file_name: str) -> str or None:
+    def read_file(folder: str, file_name: str) -> Optional[str]:
         try:
             f = open(os.path.join(folder, file_name), "r", encoding='utf-8')
             dat = f.read()
             f.close()
-            logger.debug(f'File read')
+            logger.debug(f'File read {os.path.join(folder, file_name)}')
             return dat
         except (FileExistsError, FileNotFoundError):
             logger.error(f'File {file_name} can not be reached')
             return None
 
     @staticmethod
-    async def a_read_file(folder: str, file_name: str) -> str or None:
+    async def a_read_file(folder: str, file_name: str) -> Optional[str]:
         path = os.path.join(folder, file_name)
         try:
             async with aiofile.async_open(file_specifier=path, mode="r", encoding='utf-8') as afp:
@@ -186,8 +210,8 @@ class AbstractCycleTime(ABC):
             return None
 
     @staticmethod
-    def _time_stamp() -> datetime:
-        return datetime.datetime.utcnow()
+    def _time_stamp() -> datetime.datetime:
+        return datetime.datetime.now(datetime.timezone.utc)
 
     @staticmethod
     def _rm_mode(record: Dict[str, Any]) -> int:
@@ -197,7 +221,8 @@ class AbstractCycleTime(ABC):
             return 1
 
     @staticmethod
-    def _rm_mode_inverse_mhz(rm_mode: int, telescope: str, rm_modes: Dict[str, List[float]] = None) -> float or int or None:
+    def _rm_mode_inverse_mhz(
+            rm_mode: int, telescope: str, rm_modes: Optional[Dict[str, List[float]]] = None) -> float | int | None:
         if not rm_modes:
             rm_modes = AbstractCycleTime._DEFAULT_RM_MODES_MHZ
         if rm_modes is not None:
@@ -252,7 +277,7 @@ class AbstractCycleTime(ABC):
         return ret
 
     @staticmethod
-    def _vector(alt: float, az: float) -> np.array:
+    def _vector(alt: float, az: float) -> np.ndarray:
         """
         Method builds vector from alt az
         :param alt: alt degrees
@@ -413,7 +438,7 @@ class AbstractCycleTime(ABC):
             else:
                 return 0
         else:
-            return 1
+            return 0
 
     @staticmethod
     async def last_clean_train_fn() -> str:
