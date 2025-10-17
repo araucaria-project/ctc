@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+
+## 1.2.0 - 2025-10-17
+### Changed
+- `cycle_time_data_clean` is refactored and fixed
+
 ## 1.1.12 - 2025-09-03
 ### Fixed
 - `cycle_time_calc` dither was on where shouldn't be
