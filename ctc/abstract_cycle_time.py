@@ -3,11 +3,7 @@ import logging
 import re
 from abc import ABC
 import os
-<<<<<<< HEAD
-from typing import Dict, Any, List, Callable, Union, Optional
-=======
 from typing import Dict, Any, List, Callable, Optional, Union
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
 import datetime
 import math
 import numpy as np
@@ -76,35 +72,19 @@ class AbstractCycleTime(ABC):
         return com_lst
 
     @staticmethod
-<<<<<<< HEAD
     def _encode_data(data: Union[Dict, List]) -> Optional[str]:
-        try:
-            return json.dumps(data)
-        except TypeError:
-            logger.error(f"Can not encode json data")
-=======
-    def _encode_data(data: Dict | List) -> Optional[str]:
         try:
             return json.dumps(data)
         except (ValueError, json.JSONDecodeError, TypeError):
             logger.warning("Can not encode json data")
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
             return None
 
     @staticmethod
     def _decode_data(data: str) -> Optional[Union[Dict, List]]:
         try:
             return json.loads(data)
-<<<<<<< HEAD
-        except TypeError as e:
-            logger.error(f"Can not decode json data, TypeError: {e}")
-            return None
-        except json.JSONDecodeError as e:
-            logger.error(f"Can not decode json data, JSONDecodeError: {e}")
-=======
         except (ValueError, json.JSONDecodeError, TypeError):
             logger.warning("Can not decode json data")
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
             return None
 
     @staticmethod
@@ -142,16 +122,9 @@ class AbstractCycleTime(ABC):
         s = data.split('\n')
         async for n in AsyncListIter(s):
             if len(n) > 1:
-<<<<<<< HEAD
                 decoded_data = AbstractCycleTime._decode_data(n)
                 if decoded_data:
-                    ret.append(AbstractCycleTime._decode_data(n))
-=======
-                try:
-                    ret.append(AbstractCycleTime._decode_data(n))
-                except json.JSONDecodeError:
-                    logger.warning(f'Can not decode {n}')
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
+                    ret.append(decoded_data)
         return ret
 
     @staticmethod

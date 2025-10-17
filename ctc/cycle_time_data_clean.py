@@ -18,7 +18,6 @@ class CycleTimeDataClean(AbstractCycleTime):
         random_id = ''
         full_nights_id = {}
         line_started = None
-<<<<<<< HEAD
 
         if not data:
             return full_nights_id
@@ -42,15 +41,7 @@ class CycleTimeDataClean(AbstractCycleTime):
                 if record['command_name'] == 'NIGHTPLAN' and \
                         ('done' in record.keys() or 'skipped' in record.keys()) and random_id == record['random_id']:
                     line_ended = current_index
-=======
-        if not data:
-            return None
-        async for n, m in AsyncEnumerateIter(data):
-            if m['command_name'] == 'NIGHTPLAN' and 'done' not in m.keys() and \
-                    'skipped' not in m.keys() and random_id != m['random_id']:
-                if line_started is not None:
-                    line_ended = n - 1
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
+
                     full_nights_id[random_id] = {
                         'started': line_started,
                         'ended':line_ended,
@@ -96,7 +87,6 @@ class CycleTimeDataClean(AbstractCycleTime):
         night_verif = await CycleTimeDataClean.a_read_file(
             folder=base_folder, file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope)
         )
-<<<<<<< HEAD
         if night_verif is not None:
             records = night_verif.split('\n')
             async for record in AsyncListIter(records):
@@ -108,18 +98,6 @@ class CycleTimeDataClean(AbstractCycleTime):
                                 full_nights_id.pop(rd['random_id'])
                     except (LookupError, ValueError, TypeError):
                         continue
-=======
-        if f is not None:
-            l = f.split('\n')
-            async for n in AsyncListIter(l):
-                if len(n) > 1:
-                    d = CycleTimeDataClean._decode_data(n)
-                    if not d:
-                        continue
-                    if 'random_id' in d.keys() and d['random_id'] in full_nights_id.keys():
-                        if d['utc_time_stamp'] == full_nights_id[d['random_id']]['utc_time_stamp']:
-                            full_nights_id.pop(d['random_id'])
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
         else:
             pass
         return full_nights_id

@@ -244,8 +244,6 @@ class CycleTimeCalc(AbstractCycleTime):
                 altaz = {'az': az, 'alt': alt}
         return altaz
 
-<<<<<<< HEAD
-=======
     def forced_readout_mode(self, command_dict: Dict[str, Any]) -> None:
         if 'kwargs' in command_dict.keys():
             if 'read_mod' in command_dict['kwargs']:
@@ -260,7 +258,6 @@ class CycleTimeCalc(AbstractCycleTime):
                         f"No red mod {new_rm} in {self._set_rm_modes[self.telescope]}"
                     )
 
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
     def _calc_time_no_wait_commands(self, command_dict: Dict[str, Any]) -> Optional[float]:
         azalt = self._mount_altaz_target(command_dict=command_dict)
         if azalt is not None and not self.tpg:
@@ -467,11 +464,7 @@ class CycleTimeCalc(AbstractCycleTime):
         """
         return self._time_length_list
 
-<<<<<<< HEAD
-    def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any]) -> Optional[float]:
-=======
     def _calc_time(self, command_name: str, command_dict_param: Dict[str, Any], exp_no: int) -> Optional[float]:
->>>>>>> 5a435b6bb2189d1a08f1ec637363f43a580b0a30
         no_error = True
         if command_name in self.USE_OBJECT_PARAMS_IN:
             param = self.available_param[self.telescope]['OBJECT']
