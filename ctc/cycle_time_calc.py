@@ -62,7 +62,7 @@ class CycleTimeCalc(AbstractCycleTime):
         self._observatory_location: Dict[str, Any] = {
             'latitude': -24.598056, 'longitude': -70.196389, 'elevation': 2817
         }
-        self._start_time: datetime.datetime = datetime.datetime.utc(datetime.UTC)
+        self._start_time: datetime.datetime = datetime.datetime.now(datetime.UTC)
         self._time_length_list: List[float] = []
         self._mk_dirs(self.base_folder)
         self._get_params()
