@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 
+## 1.2.1 - 2025-12-15
+### Fixed
+- `abstract_cycle_time` utc now is fixed (timezone added)
+- `abstract_cycle_time` OSError: [Errno 30] Read-only file system: '/data' served
+
 ## 1.2.0 - 2025-10-17
 ### Changed
 - `cycle_time_data_clean` is refactored and fixed
