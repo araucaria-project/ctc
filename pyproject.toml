@@ -7,8 +7,8 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python =  ">=3.9,<4.0"
-numpy = ">=1.22,<2"
+python =  ">=3.10,<4.0"
+numpy = ">=1.22"
 scikit-learn = "^1.5.2"
 pyaraucaria = {git = "https://github.com/araucaria-project/pyaraucaria.git"}
 aiofile = "^3.9.0"
