@@ -19,6 +19,7 @@ class CycleTimeTrain(AbstractCycleTime):
     """
 
     _MIN_DATA_RECORDS_TO_TRAIN = 10
+    _MAX_DATA_RECORDS_TO_TRAIN = 1000
 
     @staticmethod
     async def _build_array(data: List[Dict[str, Any]], xory: str) -> Optional[np.ndarray]:
@@ -63,8 +64,11 @@ class CycleTimeTrain(AbstractCycleTime):
         dome_avr_dist, mount_avr_dist = await CycleTimeTrain.calc_dome_mount_average_dist(parsed_data=parsed_data)
         data_x = await CycleTimeTrain._build_array(data=parsed_data, xory='x')
         data_y = await CycleTimeTrain._build_array(data=parsed_data, xory='y')
-        if (data_x is not None) and (data_y is not None) and (len(data_x) >= min_record_to_train):
-            param = await CycleTimeTrain._train(data_x=data_x, data_y=data_y)
+        if data_x is not None and data_y is not None and len(data_x) >= min_record_to_train:
+            param = await CycleTimeTrain._train(
+                data_x=data_x[-_MAX_DATA_RECORDS_TO_TRAIN:-1],
+                data_y=data_y[-_MAX_DATA_RECORDS_TO_TRAIN:-1],
+            )
             param['dome_average_dist'] = dome_avr_dist
             param['mount_average_dist'] = mount_avr_dist
             await CycleTimeTrain._save_train_param_to_file(

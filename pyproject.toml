@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ctc"
-version = "1.2.2" # Change also in ctc_bases.py
+version = "1.2.3" # Change also in ctc_bases.py
 description = "Telescope Cycle Time Calculator"
 authors = ["MMiirrkk <cot@wp.pl>"]
 license = "MIT"
