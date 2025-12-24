@@ -66,8 +66,8 @@ class CycleTimeTrain(AbstractCycleTime):
         data_y = await CycleTimeTrain._build_array(data=parsed_data, xory='y')
         if data_x is not None and data_y is not None and len(data_x) >= min_record_to_train:
             param = await CycleTimeTrain._train(
-                data_x=data_x[-_MAX_DATA_RECORDS_TO_TRAIN:-1],
-                data_y=data_y[-_MAX_DATA_RECORDS_TO_TRAIN:-1],
+                data_x=data_x[-CycleTimeTrain._MAX_DATA_RECORDS_TO_TRAIN: -1],
+                data_y=data_y[-CycleTimeTrain._MAX_DATA_RECORDS_TO_TRAIN: -1],
             )
             param['dome_average_dist'] = dome_avr_dist
             param['mount_average_dist'] = mount_avr_dist
