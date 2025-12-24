@@ -6,7 +6,17 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
-## 1.1.15 - 2025-09-03
+
+## 1.2.3 - 2025-12-15
+### Fixed
+- `abstract_cycle_time` utc now is fixed (timezone added)
+- `abstract_cycle_time` OSError: [Errno 30] Read-only file system: '/data' served
+
+## 1.2.0 - 2025-10-17
+### Changed
+- `cycle_time_data_clean` is refactored and fixed
+
+## 1.1.12 - 2025-09-03
 ### Fixed
 - `cycle_time_calc` dither was on where shouldn't be
 - `cycle_time_calc` add possible commands _available_param_telesc_commands from USE_OBJECT_PARAMS_IN

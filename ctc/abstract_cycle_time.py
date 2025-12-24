@@ -55,7 +55,7 @@ class AbstractCycleTime(ABC):
                     tel = n.split('_')[0]
                     if tel not in tel_lst:
                         tel_lst.append(tel)
-        except (FileExistsError, FileNotFoundError):
+        except OSError:
             pass
         return tel_lst
 
@@ -67,12 +67,12 @@ class AbstractCycleTime(ABC):
             for n in l_dir:
                 if (AbstractCycleTime._FILE_NAMES[file_type] in n) and (telescope in n):
                     com_lst.append(n.split('_')[1])
-        except (FileExistsError, FileNotFoundError):
+        except OSError:
             pass
         return com_lst
 
     @staticmethod
-    def _encode_data(data: Dict | List) -> Optional[str]:
+    def _encode_data(data: Union[Dict, List]) -> Optional[str]:
         try:
             return json.dumps(data)
         except (ValueError, json.JSONDecodeError, TypeError):
@@ -122,10 +122,9 @@ class AbstractCycleTime(ABC):
         s = data.split('\n')
         async for n in AsyncListIter(s):
             if len(n) > 1:
-                try:
-                    ret.append(AbstractCycleTime._decode_data(n))
-                except json.JSONDecodeError:
-                    logger.warning(f'Can not decode {n}')
+                decoded_data = AbstractCycleTime._decode_data(n)
+                if decoded_data:
+                    ret.append(decoded_data)
         return ret
 
     @staticmethod
@@ -133,7 +132,7 @@ class AbstractCycleTime(ABC):
         try:
             if not os.path.exists(base_folder):
                 os.makedirs(base_folder, exist_ok=True)
-        except PermissionError:
+        except OSError:
             logger.error(f'Can not create folder {base_folder} - no permission, '
                          f'please create folder manually and grant permissions')
 
@@ -144,7 +143,7 @@ class AbstractCycleTime(ABC):
             f.write(f'{data}')
             f.write('\n')
             f.close()
-        except (FileExistsError, FileNotFoundError):
+        except OSError:
             logger.error(f'File {file_name} can not be reached')
             return None
 
@@ -167,7 +166,7 @@ class AbstractCycleTime(ABC):
             f.close()
             logger.debug(f'File read {os.path.join(folder, file_name)}')
             return dat
-        except (FileExistsError, FileNotFoundError):
+        except OSError:
             logger.error(f'File {file_name} can not be reached')
             return None
 
@@ -191,7 +190,7 @@ class AbstractCycleTime(ABC):
     def _rm_mode(record: Dict[str, Any]) -> int:
         try:
             return int(record['readoutmode'])
-        except KeyError:
+        except LookupError:
             return 1
 
     @staticmethod
@@ -205,7 +204,7 @@ class AbstractCycleTime(ABC):
                     try:
                         rm_mode_val = rm_modes[telescope][rm_mode]
                         return 1/rm_mode_val
-                    except IndexError:
+                    except LookupError:
                         logger.warning('Readoutmodes not match readoutmode - rm mode default returned')
                         rm_mode_val = rm_modes['default'][rm_mode]
                         return 1/rm_mode_val
@@ -347,7 +346,7 @@ class AbstractCycleTime(ABC):
                 for n in s:
                     try:
                         ret += int(n.split('/')[0])
-                    except (ValueError, IndexError):
+                    except (ValueError, LookupError):
                         ret += 1
         logger.debug(f'Record:{record}, seq_number:{ret}')
         return ret
@@ -434,7 +433,7 @@ class AbstractCycleTime(ABC):
         except OSError:
             return False
         mod_time_readable = datetime.datetime.fromtimestamp(mod_time)
-        current_date = datetime.datetime.now().date()
+        current_date = datetime.datetime.now(datetime.timezone.utc).date()
         modification_date = mod_time_readable.date()
         if modification_date == current_date:
             return True

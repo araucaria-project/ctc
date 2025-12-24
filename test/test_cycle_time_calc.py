@@ -21,7 +21,7 @@ class TestCycleTime(unittest.TestCase):
         alt_end = 0
         c2r = np.array([0.0, 0.0, 1.0])
         c2 = AbstractCycleTime._vector(alt=alt_end, az=az_end)
-        self.assertAlmostEqual(first=np.mean(c2-c2r), second=0, places=15)
+        self.assertAlmostEqual(first=float(np.mean(c2-c2r)), second=0, places=15)
 
     def test_from_string(self):
 

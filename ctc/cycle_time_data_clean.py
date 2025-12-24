@@ -3,8 +3,7 @@ from typing import Dict, Any, List, Optional
 from ctc.abstract_cycle_time import AbstractCycleTime
 import logging
 from collections import OrderedDict
-from ctc.iter_async import AsyncEnumerateIter, AsyncDictItemsIter, AsyncListIter
-
+from ctc.iter_async import AsyncEnumerateIter, AsyncDictItemsIter, AsyncListIter, AsyncRangeIter
 
 logger = logging.getLogger(__name__.rsplit('.')[-1])
 
@@ -19,32 +18,39 @@ class CycleTimeDataClean(AbstractCycleTime):
         random_id = ''
         full_nights_id = {}
         line_started = None
+
         if not data:
-            return None
-        async for n, m in AsyncEnumerateIter(data):
-            if m['command_name'] == 'NIGHTPLAN' and 'done' not in m.keys() and \
-                    'skipped' not in m.keys() and random_id != m['random_id']:
-                if line_started is not None:
-                    line_ended = n - 1
+            return full_nights_id
+
+        async for current_index, record in AsyncEnumerateIter(data):
+
+            try:
+                if record['command_name'] == 'NIGHTPLAN' and 'done' not in record.keys() and \
+                        'skipped' not in record.keys() and random_id != record['random_id']:
+                    if line_started is not None:
+                        line_ended = current_index - 1
+                        full_nights_id[random_id] = {
+                            'started': line_started,
+                            'ended': line_ended,
+                            'utc_time_stamp': record["utc_time_stamp"]
+                        }
+                        line_started = None
+                    else:
+                        random_id = record['random_id']
+                        line_started = current_index
+                if record['command_name'] == 'NIGHTPLAN' and \
+                        ('done' in record.keys() or 'skipped' in record.keys()) and random_id == record['random_id']:
+                    line_ended = current_index
+
                     full_nights_id[random_id] = {
                         'started': line_started,
-                        'ended': line_ended,
-                        'utc_time_stamp': m["utc_time_stamp"]
+                        'ended':line_ended,
+                        'utc_time_stamp': record["utc_time_stamp"]
                     }
                     line_started = None
-                else:
-                    random_id = m['random_id']
-                    line_started = n
-            if m['command_name'] == 'NIGHTPLAN' and ('done' in m.keys() or 'skipped' in m.keys()) \
-                    and random_id == m['random_id']:
-                line_ended = n
-                full_nights_id[random_id] = {
-                    'started': line_started,
-                    'ended':line_ended,
-                    'utc_time_stamp': m["utc_time_stamp"]
-                }
-                line_started = None
-        logger.debug(f'Nights id found: {full_nights_id}')
+            except (LookupError, TypeError, ValueError):
+                continue
+
         return full_nights_id
 
     @staticmethod
@@ -53,37 +59,45 @@ class CycleTimeDataClean(AbstractCycleTime):
             full_nights_id: Dict[str, Dict[str, Any]], rm_modes: Dict[str, List[float]] = None) -> Dict[str, Any]:
         commands_data = {}
         async for n_id, m_dict in AsyncDictItemsIter(full_nights_id):
-            async for p_no, q_data in AsyncEnumerateIter(data):
-                if not isinstance(m_dict['started'], int) or not isinstance(m_dict['ended'], int):
+            masked_data = []
+            try:
+                async for rec_id in AsyncRangeIter(m_dict['started'], m_dict['ended']):
+                    masked_data.append(data[rec_id])
+            except (ValueError, TypeError, LookupError):
+                continue
+
+            async for p_no, q_data in AsyncEnumerateIter(masked_data):
+                if q_data['command_name'] not in commands_data.keys():
+                    commands_data[q_data['command_name']] = []
+                try:
+                    masked_data[p_no + 1]['skipped']
+                except (ValueError, TypeError, LookupError):
                     continue
-                if m_dict['started'] < p_no < m_dict['ended']:
-                    if q_data['command_name'] not in commands_data.keys():
-                        commands_data[q_data['command_name']] = []
-                    if 'done' not in q_data.keys():
-                        if q_data['command_name'] not in AbstractCycleTime._NO_TRAIN_COMMANDS:
-                            if data[p_no + 1]['skipped'] == 'False':
-                                dat = await CycleTimeDataClean._build_command_data(
-                                    data=data, telescope=telescope, night_id=n_id, line_start=p_no, rm_modes=rm_modes
-                                )
-                                if dat is not None:
-                                    commands_data[q_data['command_name']].append(dat)
+                if q_data['command_name'] not in AbstractCycleTime._NO_TRAIN_COMMANDS:
+                    if masked_data[p_no + 1]['skipped'] == 'False':
+                        dat = await CycleTimeDataClean._build_command_data(
+                            data=masked_data, telescope=telescope, night_id=n_id, line_start=p_no, rm_modes=rm_modes
+                        )
+                        if dat is not None:
+                            commands_data[q_data['command_name']].append(dat)
         return commands_data
 
     @staticmethod
     async def _verify_nights(full_nights_id: Dict[str, Dict[str, Any]], telescope: str, base_folder: str):
-        f = await CycleTimeDataClean.a_read_file(
+        night_verif = await CycleTimeDataClean.a_read_file(
             folder=base_folder, file_name=CycleTimeDataClean.night_verif_file_name(telescope=telescope)
         )
-        if f is not None:
-            l = f.split('\n')
-            async for n in AsyncListIter(l):
-                if len(n) > 1:
-                    d = CycleTimeDataClean._decode_data(n)
-                    if not d:
+        if night_verif is not None:
+            records = night_verif.split('\n')
+            async for record in AsyncListIter(records):
+                if len(record) > 1:
+                    rd = CycleTimeDataClean._decode_data(record)
+                    try:
+                        if rd['random_id'] in full_nights_id.keys():
+                            if rd['utc_time_stamp'] == full_nights_id[rd['random_id']]['utc_time_stamp']:
+                                full_nights_id.pop(rd['random_id'])
+                    except (LookupError, ValueError, TypeError):
                         continue
-                    if 'random_id' in d.keys() and d['random_id'] in full_nights_id.keys():
-                        if d['utc_time_stamp'] == full_nights_id[d['random_id']]['utc_time_stamp']:
-                            full_nights_id.pop(d['random_id'])
         else:
             pass
         return full_nights_id
@@ -112,13 +126,18 @@ class CycleTimeDataClean(AbstractCycleTime):
     @staticmethod
     async def _build_command_data(
             data: List[Dict[str, Any]], telescope: str, night_id: str,
-            line_start: int, rm_modes: Dict[str, List[float]] = None) -> Dict[str, Any]:
+            line_start: int, rm_modes: Dict[str, List[float]] = None) -> Optional[Dict[str, Any]]:
 
-        first = data[line_start]
-        second = data[line_start + 1]
-        third = data[line_start + 2]
+        try:
+            first = data[line_start] # Here operation starts
+            second = data[line_start + 1]  # Here operation ends
+            third = data[line_start + 2]  # Here where another operation starts (not NIGHTPLAN)
+        except (LookupError, ValueError, TypeError):
+            return None
 
         if third['command_name'] == 'NIGHTPLAN' and 'done' not in third.keys() and 'skipped' not in third.keys():
+            dat = None
+        elif 'done' in first.keys() and bool(first['done']) == True:
             dat = None
         else:
             if 'dome_az_end' in third.keys():
@@ -183,6 +202,8 @@ class CycleTimeDataClean(AbstractCycleTime):
             folder=base_folder,
             file_name=CycleTimeDataClean.raw_file_name(telescope=telescope)
         )
+        if not str_dat:
+            return
         parsed_data = await CycleTimeDataClean._a_parse_data(str_dat)
         full_nights_id = await CycleTimeDataClean._find_nights_id(parsed_data)
         full_nights_id = await CycleTimeDataClean._verify_nights(
