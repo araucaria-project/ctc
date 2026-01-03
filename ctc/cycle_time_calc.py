@@ -490,6 +490,6 @@ class CycleTimeCalc(AbstractCycleTime):
         Reset time accumulated during time calculation.
         :return: None
         """
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = datetime.datetime.now(datetime.timezone.utc)
         self._time_length_list = []
         self._time_length = 0
