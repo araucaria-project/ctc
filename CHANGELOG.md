@@ -6,9 +6,10 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
-## 1.2.5 - 2025-12-24
+## 1.2.6 - 2025-12-24
 ### Fixed
 - max 1500 observations train
+- utc timezone problem fix
 
 ## 1.2.4 - 2025-12-15
 ### Fixed
