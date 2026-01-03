@@ -351,7 +351,14 @@ class CycleTimeCalc(AbstractCycleTime):
                         )
                     except AttributeError:
                         return 0
-                    t = (sun - now).seconds
+                    try:
+                        t = (sun - now).seconds
+                    except TypeError:
+                        try:
+                            t = (sun - now.astimezone(datetime.timezone.utc)).seconds
+                        except TypeError:
+                            t = 0
+                            logger.error(f'Wrong time format, set to 0')
                     if t / 3600 > 18:
                         t = 0
                     else:
@@ -371,8 +378,14 @@ class CycleTimeCalc(AbstractCycleTime):
                         )
                     except AttributeError:
                         return 0
-                    t = (sun - now).seconds
-                    t = (sun - now).seconds
+                    try:
+                        t = (sun - now).seconds
+                    except TypeError:
+                        try:
+                            t = (sun - now.astimezone(datetime.timezone.utc)).seconds
+                        except TypeError:
+                            t = 0
+                            logger.error(f'Wrong time format, set to 0')
                     if t / 3600 > 12:
                         t = 0
                     else:
