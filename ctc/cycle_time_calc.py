@@ -187,7 +187,7 @@ class CycleTimeCalc(AbstractCycleTime):
         :param utc_time_stamp: Put utc timestamp (datetime).
         :return: None
         """
-        self._start_time = utc_time_stamp
+        self._start_time = utc_time_stamp.astimezone(datetime.timezone.utc)
 
     def set_telescope_start_az_alt(self, az: float, alt: float) -> None:
         """
@@ -410,7 +410,7 @@ class CycleTimeCalc(AbstractCycleTime):
         :param time_str: time in str format
         :return: timestamp of date(date_time_stamp) and time(time_str)
         """
-        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp)
+        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp).astimezone(datetime.timezone.utc)
         day = dat_ts_0.strftime('%Y-%m-%d')
         mydate = f"{day} {time_str}"
         return time.mktime(datetime.datetime.strptime(mydate, "%Y-%m-%d %H:%M:%S").timetuple())
