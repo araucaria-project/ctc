@@ -4,11 +4,11 @@ import logging
 
 logging.basicConfig(level='DEBUG')
 
-tele = 'jk15'
+tele = 'zb08'
 c = CycleTimeCalc(telescope=tele, base_folder='/data/misc/cycle_time_calc')
-c.set_start_rmode(rmode=3)
+c.set_start_rmode(rmode=2)
 c.set_current_filter(filter_='u')
-prog = 'OBJECT seq=2/g/60,2/r/45,2/i/60,2/z/100,2/B/90,2/V/65,2/Ic/70,2/g/60,2/r/45,2/i/60,2/z/100,2/B/90,2/V/65,2/Ic/70'
+prog = 'OBJECT seq=2/Ic/16,2/V/7.2,2/g/7.9,2/r/5.2,2/i/9.7,2/z/40'
 time = c.calc_time(command_dict=prog)
 logging.info(f'{tele} {prog} -> time: {time}')
 
