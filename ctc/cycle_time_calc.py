@@ -187,7 +187,7 @@ class CycleTimeCalc(AbstractCycleTime):
         :param utc_time_stamp: Put utc timestamp (datetime).
         :return: None
         """
-        self._start_time = utc_time_stamp.astimezone(datetime.timezone.utc)
+        self._start_time = utc_time_stamp.replace(tzinfo=datetime.timezone.utc)
 
     def set_telescope_start_az_alt(self, az: float, alt: float) -> None:
         """
@@ -355,7 +355,7 @@ class CycleTimeCalc(AbstractCycleTime):
                         t = (sun - now).seconds
                     except TypeError:
                         try:
-                            t = (sun - now.astimezone(datetime.timezone.utc)).seconds
+                            t = (sun - now.replace(tzinfo=datetime.timezone.utc)).seconds
                         except TypeError:
                             t = 0
                             logger.error(f'Wrong time format, set to 0')
@@ -382,7 +382,7 @@ class CycleTimeCalc(AbstractCycleTime):
                         t = (sun - now).seconds
                     except TypeError:
                         try:
-                            t = (sun - now.astimezone(datetime.timezone.utc)).seconds
+                            t = (sun - now.replace(tzinfo=datetime.timezone.utc)).seconds
                         except TypeError:
                             t = 0
                             logger.error(f'Wrong time format, set to 0')
@@ -410,7 +410,7 @@ class CycleTimeCalc(AbstractCycleTime):
         :param time_str: time in str format
         :return: timestamp of date(date_time_stamp) and time(time_str)
         """
-        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp).astimezone(datetime.timezone.utc)
+        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp).replace(tzinfo=datetime.timezone.utc)
         day = dat_ts_0.strftime('%Y-%m-%d')
         mydate = f"{day} {time_str}"
         return time.mktime(datetime.datetime.strptime(mydate, "%Y-%m-%d %H:%M:%S").timetuple())
