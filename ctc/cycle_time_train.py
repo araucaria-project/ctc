@@ -19,7 +19,7 @@ class CycleTimeTrain(AbstractCycleTime):
     """
 
     _MIN_DATA_RECORDS_TO_TRAIN = 10
-    _MAX_DATA_RECORDS_TO_TRAIN = 3500
+    _MAX_DATA_RECORDS_TO_TRAIN = 5000
 
     @staticmethod
     async def _build_array(data: List[Dict[str, Any]], xory: str) -> Optional[np.ndarray]:
