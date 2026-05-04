@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+
+## 1.2.13 - 2026-05-04
+### Fixed
+- `cycle_time_calc` `ra_dec_2_az_alt` call instead of proper time, unix seconds were passed.  
+
 ## 1.2.10 - 2025-12-24
 ### Fixed
 - max 2500 observations train
@@ -15,6 +20,10 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 - `abstract_cycle_time` utc now is fixed (timezone added)
 - `abstract_cycle_time` OSError: [Errno 30] Read-only file system: '/data' served
+
+## 1.2.1 - 2025-12-13
+### Changed
+- allowed numpy 2.0
 
 ## 1.2.0 - 2025-10-17
 ### Changed
