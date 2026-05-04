@@ -62,7 +62,7 @@ class CycleTimeCalc(AbstractCycleTime):
         self._observatory_location: Dict[str, Any] = {
             'latitude': -24.598056, 'longitude': -70.196389, 'elevation': 2817
         }
-        self._start_time: datetime.datetime = datetime.datetime.utc(datetime.UTC)
+        self._start_time: datetime.datetime = datetime.datetime.now(datetime.timezone.utc)
         self._time_length_list: List[float] = []
         self._mk_dirs(self.base_folder)
         self._get_params()
@@ -187,7 +187,7 @@ class CycleTimeCalc(AbstractCycleTime):
         :param utc_time_stamp: Put utc timestamp (datetime).
         :return: None
         """
-        self._start_time = utc_time_stamp
+        self._start_time = utc_time_stamp.replace(tzinfo=datetime.timezone.utc)
 
     def set_telescope_start_az_alt(self, az: float, alt: float) -> None:
         """
@@ -351,7 +351,14 @@ class CycleTimeCalc(AbstractCycleTime):
                         )
                     except AttributeError:
                         return 0
-                    t = (sun - now).seconds
+                    try:
+                        t = (sun - now).seconds
+                    except TypeError:
+                        try:
+                            t = (sun - now.replace(tzinfo=datetime.timezone.utc)).seconds
+                        except TypeError:
+                            t = 0
+                            logger.error(f'Wrong time format, set to 0')
                     if t / 3600 > 18:
                         t = 0
                     else:
@@ -371,8 +378,14 @@ class CycleTimeCalc(AbstractCycleTime):
                         )
                     except AttributeError:
                         return 0
-                    t = (sun - now).seconds
-                    t = (sun - now).seconds
+                    try:
+                        t = (sun - now).seconds
+                    except TypeError:
+                        try:
+                            t = (sun - now.replace(tzinfo=datetime.timezone.utc)).seconds
+                        except TypeError:
+                            t = 0
+                            logger.error(f'Wrong time format, set to 0')
                     if t / 3600 > 12:
                         t = 0
                     else:
@@ -397,7 +410,7 @@ class CycleTimeCalc(AbstractCycleTime):
         :param time_str: time in str format
         :return: timestamp of date(date_time_stamp) and time(time_str)
         """
-        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp)
+        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp).replace(tzinfo=datetime.timezone.utc)
         day = dat_ts_0.strftime('%Y-%m-%d')
         mydate = f"{day} {time_str}"
         return time.mktime(datetime.datetime.strptime(mydate, "%Y-%m-%d %H:%M:%S").timetuple())
@@ -490,6 +503,6 @@ class CycleTimeCalc(AbstractCycleTime):
         Reset time accumulated during time calculation.
         :return: None
         """
-        self._start_time = datetime.datetime.utcnow()
+        self._start_time = datetime.datetime.now(datetime.timezone.utc)
         self._time_length_list = []
         self._time_length = 0
