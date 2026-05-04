@@ -235,7 +235,7 @@ class CycleTimeCalc(AbstractCycleTime):
                                       latitude=self._observatory_location['latitude'],
                                       elevation=self._observatory_location['elevation'],
                                       epoch=self._epoch,
-                                      time=self._start_time.timestamp() + self._time_length)
+                                      time = self._start_time + datetime.timedelta(seconds=self._time_length))
             altaz = {'az': az, 'alt': alt}
         if 'kwargs' in command_dict.keys() and (ra is None) and (dec is None):
             if ('az' and 'alt') in command_dict['kwargs'].keys():

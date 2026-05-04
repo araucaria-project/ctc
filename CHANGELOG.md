@@ -6,6 +6,13 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.2.2 - 2026-05-04
+### Fixed
+- `cycle_time_calc` `ra_dec_2_az_alt` call instead of proper time, unix seconds were passed.  
+
+## 1.2.1 - 2025-12-13
+### Changed
+- allowed numpy 2.0
 
 ## 1.2.0 - 2025-10-17
 ### Changed
