@@ -2,6 +2,7 @@ from ctc.abstract_cycle_time import AbstractCycleTime
 from ctc import CycleTimeCalc
 import unittest
 import numpy as np
+import datetime
 
 class TestCycleTime(unittest.TestCase):
 
@@ -28,6 +29,15 @@ class TestCycleTime(unittest.TestCase):
         z = CycleTimeCalc('dev', '/data/misc/cycle_time_calc').calc_time("OBJECT alt=45 az=0 seq=3/Red/4")
         # print(z)
         self.assertGreater(a=z, b=0)
+
+    def test_ut(self):
+
+        z = CycleTimeCalc('dev', '/data/misc/cycle_time_calc')
+        z.set_start_time(datetime.datetime.now(datetime.timezone.utc))
+        # print(datetime.datetime.now(datetime.timezone.utc))
+        a = z.calc_time("WAIT ut=16:37:00")
+        # print(a / 60)
+        # self.assertGreater(a=z, b=0)
 
 
 if __name__ == '__main__':
