@@ -335,6 +335,10 @@ class CycleTimeCalc(AbstractCycleTime):
                     )
                     if _start > _end:
                         _end = _end + datetime.timedelta(days=1)
+                    if _start > _end:
+                        _end = _end + datetime.timedelta(days=1)
+                    if _start > _end:
+                        _end = _end + datetime.timedelta(days=1)
 
                     return (_end - _start).total_seconds()
 
