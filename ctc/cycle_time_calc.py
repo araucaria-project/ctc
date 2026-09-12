@@ -335,7 +335,7 @@ class CycleTimeCalc(AbstractCycleTime):
                     )
 
                     if _start > _end:
-                        if _start + datetime.timedelta(hours=12) > _end:
+                        if _start  > _end + datetime.timedelta(hours=12):
                             _end = _end + datetime.timedelta(days=1)
                             return (_end - _start).total_seconds()
                         else:
