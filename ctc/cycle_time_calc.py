@@ -333,6 +333,7 @@ class CycleTimeCalc(AbstractCycleTime):
                         second=int(ut_str.split(':')[2]),
                         microsecond=0
                     )
+
                     if _start + datetime.timedelta(hours=12) > _end:
                         return 0
                     else:
