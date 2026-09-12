@@ -6,6 +6,9 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+## 1.2.14 - 2026-09-12
+### Fixed
+- `cycle_time_calc` - fix ut wait.  
 
 ## 1.2.13 - 2026-05-04
 ### Fixed

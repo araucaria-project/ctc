@@ -319,24 +319,24 @@ class CycleTimeCalc(AbstractCycleTime):
                     return t
 
                 elif 'ut' in command_dict['kwargs'].keys():
-                    dat_0 = self._start_time.timestamp() + self._time_length
                     val = (command_dict['kwargs']['ut']).split(':')
                     if len(val) == 2:
                         ut_str = f'{val[0]}:{val[1]}:00'
                     else:
                         ut_str = command_dict['kwargs']['ut']
-                    target_t = self._that_day_time(date_time_stamp=dat_0, time_str=ut_str)
-                    if target_t >= (self._start_time.timestamp() + self._time_length):
-                        t = float(target_t - (self._start_time.timestamp() + self._time_length))
-                        self._time_length += t
-                        return t
-                    else:
-                        dat_1 = self._start_time.timestamp() + self._time_length +\
-                                datetime.timedelta(days=1).total_seconds()
-                        target_t = self._that_day_time(date_time_stamp=dat_1, time_str=command_dict['kwargs']['ut'])
-                        t = float(target_t - (self._start_time.timestamp() + self._time_length))
-                        self._time_length += t
-                        return t
+
+                    _start = self._start_time + datetime.timedelta(seconds=self._time_length)
+                    _end = datetime.datetime.now(datetime.timezone.utc)
+                    _end = _end.replace(
+                        hour=int(ut_str.split(':')[0]),
+                        minute=int(ut_str.split(':')[1]),
+                        second=int(ut_str.split(':')[2]),
+                        microsecond=0
+                    )
+                    if _start > _end:
+                        _end = _end + datetime.timedelta(days=1)
+
+                    return (_end - _start).total_seconds()
 
                 elif 'sunrise' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
@@ -401,19 +401,6 @@ class CycleTimeCalc(AbstractCycleTime):
         else:
             logger.debug(f'Cannot calculate time, command not recognized')
             return 0.0
-
-    @staticmethod
-    def _that_day_time(date_time_stamp: float, time_str: str) -> float:
-        """
-        Metgod gives time of time_str for day given by date_time_stamp (no matter what time in this date_time_stamp)
-        :param date_time_stamp: day red from this timestamp
-        :param time_str: time in str format
-        :return: timestamp of date(date_time_stamp) and time(time_str)
-        """
-        dat_ts_0 = datetime.datetime.fromtimestamp(date_time_stamp).replace(tzinfo=datetime.timezone.utc)
-        day = dat_ts_0.strftime('%Y-%m-%d')
-        mydate = f"{day} {time_str}"
-        return time.mktime(datetime.datetime.strptime(mydate, "%Y-%m-%d %H:%M:%S").timetuple())
 
     def calc_time(self, command_dict: Union[Dict[str, Any], str]) -> Optional[float]:
         """
