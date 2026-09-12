@@ -333,14 +333,12 @@ class CycleTimeCalc(AbstractCycleTime):
                         second=int(ut_str.split(':')[2]),
                         microsecond=0
                     )
-                    if _start > _end:
+                    if _start + datetime.timedelta(hours=12) > _end:
+                        return 0
+                    else:
                         _end = _end + datetime.timedelta(days=1)
-                    if _start > _end:
-                        _end = _end + datetime.timedelta(days=1)
-                    if _start > _end:
-                        _end = _end + datetime.timedelta(days=1)
+                        return (_end - _start).total_seconds()
 
-                    return (_end - _start).total_seconds()
 
                 elif 'sunrise' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
