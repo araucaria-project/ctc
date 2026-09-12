@@ -326,7 +326,7 @@ class CycleTimeCalc(AbstractCycleTime):
                         ut_str = command_dict['kwargs']['ut']
 
                     _start = self._start_time + datetime.timedelta(seconds=self._time_length)
-                    _end = datetime.datetime.now(datetime.timezone.utc)
+                    _end = _start
                     _end = _end.replace(
                         hour=int(ut_str.split(':')[0]),
                         minute=int(ut_str.split(':')[1]),
