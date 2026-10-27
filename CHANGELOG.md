@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ### Changed
 ### Fixed
 
+
+## 1.2.20 - 2026-10-27
+### Fixed
+- `cycle_time_calc` - fix ut wait: closest ut and sum add.
+
 ## 1.2.15 - 2026-09-12
 ### Fixed
 - `cycle_time_calc` - fix ut wait.  

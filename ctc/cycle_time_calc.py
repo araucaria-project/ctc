@@ -334,14 +334,15 @@ class CycleTimeCalc(AbstractCycleTime):
                         microsecond=0
                     )
 
-                    if _start > _end:
-                        if _start  > _end + datetime.timedelta(hours=12):
-                            _end = _end + datetime.timedelta(days=1)
-                            return (_end - _start).total_seconds()
-                        else:
-                            return 0
-                    else:
-                        return (_end - _start).total_seconds()
+                    # nearest occurrence of ut within +-12 h of _start
+                    if _end - _start > datetime.timedelta(hours=12):
+                        _end = _end - datetime.timedelta(days=1)
+                    elif _start - _end > datetime.timedelta(hours=12):
+                        _end = _end + datetime.timedelta(days=1)
+
+                    t = max((_end - _start).total_seconds(), 0.0)
+                    self._time_length += t
+                    return t
 
                 elif 'sunrise' in command_dict['kwargs'].keys():
                     now = self._start_time + datetime.timedelta(seconds=self._time_length)
