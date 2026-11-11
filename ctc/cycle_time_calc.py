@@ -8,8 +8,6 @@ from pyaraucaria.ephemeris import calculate_sun_rise_set
 from pyaraucaria.obs_plan.obs_plan_parser import ObsPlanParser
 import time
 
-# Do not download IERS tables from the internet - use the ones bundled with astropy.
-# Precision loss (sub-second) is irrelevant for cycle time calculation.
 iers.conf.auto_download = False
 iers.conf.auto_max_age = None
 
