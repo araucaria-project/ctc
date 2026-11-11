@@ -7,6 +7,11 @@ All notable changes to this project will be documented in this file.
 ### Fixed
 
 
+## 1.2.21 - 2026-11-11
+### Fixed
+- `cycle_time_calc` - turned off astropy auto download.
+
+
 ## 1.2.20 - 2026-10-27
 ### Fixed
 - `cycle_time_calc` - fix ut wait: closest ut and sum add.
